@@ -17,7 +17,8 @@ class SSH extends CUserIdentity {
     private $stream_timeout = 100;
     private $lastLog;
     public $errorCode;
-    public function __construct($host, $port, $user) {
+
+    public function __construct($host,$port,$user) {
         $this->privateKey = Yii::app()->basePath . '/.ssh-key/id_rsa';
         $this->publicKey = Yii::app()->basePath . '/.ssh-key/id_rsa.pub';
         $this->host = $host;

@@ -1,3 +1,4 @@
+<?php /* source file: /var/www/html/torque/protected/views/node/admin.php */ ?>
 <?php
 /* @var $this NodeController */
 /* @var $model Node */

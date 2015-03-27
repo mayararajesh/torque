@@ -1,13 +1,16 @@
 <?php
-
 /**
  * This is the model class for table "nodes".
  *
+ * @author Rajesh Mayara<rajesh.mayara@locuz.com>
+ * @version     2.0
+ * @since       2.0
+ * 
  * The followings are the available columns in table 'nodes':
  * @property integer $id
  * @property string $name
  * @property integer $np
- * @property integer $gpu
+ * @property integer $gpus
  * @property integer $phi
  */
 class Node extends CActiveRecord
@@ -29,11 +32,11 @@ class Node extends CActiveRecord
 		// will receive user inputs.
 		return array(
 			array('name', 'required'),
-			array('np, gpu, phi', 'numerical', 'integerOnly'=>true),
+			array('np, gpus, mics', 'numerical', 'integerOnly'=>true),
 			array('name', 'length', 'max'=>255),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('name, np, gpu, phi', 'safe', 'on'=>'search'),
+			array('name, np, gpus, mics', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -56,9 +59,9 @@ class Node extends CActiveRecord
 		return array(
 			'id' => 'ID',
 			'name' => 'Name',
-			'np' => 'Processors per Node',
-			'gpu' => 'GPU',
-			'phi' => 'Phi Cards',
+			'np' => '#Processors',
+			'gpus' => '#GPU',
+			'mics' => '#Phi Cards',
 		);
 	}
 
@@ -83,8 +86,8 @@ class Node extends CActiveRecord
 		$criteria->compare('id',$this->id);
 		$criteria->compare('name',$this->name,true);
 		$criteria->compare('np',$this->np);
-		$criteria->compare('gpu',$this->gpu);
-		$criteria->compare('phi',$this->phi);
+		$criteria->compare('gpus',$this->gpus);
+		$criteria->compare('mics',$this->mics);
 
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,

@@ -24,8 +24,8 @@ class m150325_100340_create_nodes_table extends CDbMigration {
             'id' => 'pk',
             'name' => 'varchar(255) NOT NULL',
             'np' => 'int(10) NULL',
-            'gpu' => 'int(10) NULL',
-            'phi' => 'int(10) NULL',
+            'gpus' => 'int(10) NULL',
+            'mics' => 'int(10) NULL',
         ));
     }
 

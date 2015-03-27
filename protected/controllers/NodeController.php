@@ -30,7 +30,7 @@ class NodeController extends Controller {
                 'users' => array('*'),
             ),
             array('allow', // allow authenticated user to perform 'create' and 'update' actions
-                'actions' => array('create', 'update'),
+                'actions' => array('create', 'update', 'online', 'offline'),
                 'users' => array('*'),
             ),
             array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -60,22 +60,33 @@ class NodeController extends Controller {
     public function actionCreate() {
         $model = new Node;
 
-        // Uncomment the following line if AJAX validation is needed
-        // $this->performAjaxValidation($model);
+// Uncomment the following line if AJAX validation is needed
+// $this->performAjaxValidation($model);
 
         if (isset($_POST['Node'])) {
             $model->attributes = $_POST['Node'];
-            $sshHost = new SSH('localhost', 22, 'root');
+            $host = Yii::app()->params->hostDetails['host'];
+            $port = Yii::app()->params->hostDetails['port'];
+            $sshHost = new SSH($host, $port, 'root');
             if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
-                $sshHost->cmd('qmgr -c "create node ' . $model->attributes['name'] . '"');
+                $error = array();
+                $cmd = 'qmgr -c "create node ' . $model->attributes['name'] . '"';
+                $cmd = $sshHost->cmd($cmd);
+                if ($cmd === "") {
+                    $this->setNodeProps($sshHost, $model);
+                } else {
+                    array_push($error, $cmd);
+                }
                 $sshHost->disconnect();
+                if (count($error) > 0) {
+                    var_dump($error);
+                    exit;
+                }
                 if ($model->save()) {
                     $this->redirect(array('view', 'id' => $model->id));
                 }
-                
             }
         }
-
         $this->render('create', array(
             'model' => $model,
         ));
@@ -89,13 +100,22 @@ class NodeController extends Controller {
     public function actionUpdate($id) {
         $model = $this->loadModel($id);
 
-        // Uncomment the following line if AJAX validation is needed
-        // $this->performAjaxValidation($model);
-
+// Uncomment the following line if AJAX validation is needed
+// $this->performAjaxValidation($model);
+        $node = $model->attributes['name'];
+        #$error = array();
         if (isset($_POST['Node'])) {
+            $_POST['Node']['name'] = $node;
             $model->attributes = $_POST['Node'];
-            if ($model->save())
-                $this->redirect(array('view', 'id' => $model->id));
+            $host = Yii::app()->params->hostDetails['host'];
+            $port = Yii::app()->params->hostDetails['port'];
+            $sshHost = new SSH($host, $port, 'root');
+            if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+                if ($model->save()) {
+                    $this->setNodeProps($sshHost, $model);
+                }
+            }
+            $this->redirect(array('view', 'id' => $model->id));
         }
 
         $this->render('update', array(
@@ -110,14 +130,15 @@ class NodeController extends Controller {
      */
     public function actionDelete($id) {
         $node = $this->loadModel($id);
-        $sshHost = new SSH('localhost', 22, 'root');
+        $host = Yii::app()->params->hostDetails['host'];
+        $port = Yii::app()->params->hostDetails['port'];
+        $sshHost = new SSH($host, $port, 'root');
         if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
             $sshHost->cmd('qmgr -c "delete node ' . $node->name . '"');
             $sshHost->disconnect();
             $this->loadModel($id)->delete();
-            
         }
-        // if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
+// if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
         if (!isset($_GET['ajax']))
             $this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('admin'));
     }
@@ -171,4 +192,63 @@ class NodeController extends Controller {
         }
     }
 
+    //--------------------------------------------------------------------------
+    /**
+     * Updates/Assign the node properties
+     * 
+     * @author Rajesh Mayara<rajesh.mayara@locuz.com>
+     * @since       2.0
+     * @param CHANNEL $sshHost
+     * @param OBJECT $model
+     */
+    private function setNodeProps($sshHost, $model) {
+        $error = array();
+        # Number of processors per node
+        if ($model->attributes['np'] !== "") {
+            $cmd = 'qmgr -c "set node ' . $model->attributes['name'] . ' np=' . $model->attributes['np'] . '"';
+            $cmd = $sshHost->cmd($cmd);
+            if ($cmd !== "") {
+                array_push($error, $cmd);
+                $cmd = "";
+            }
+        }
+        # Number of gpus per node
+        if ($model->attributes['gpus'] !== "") {
+            $cmd = 'qmgr -c "set node ' . $model->attributes['name'] . ' gpus=' . $model->attributes['gpus'] . '"';
+            $cmd = $sshHost->cmd($cmd);
+            if ($cmd !== "") {
+                array_push($error, $cmd);
+                $cmd = "";
+            }
+        }
+        # Number of mics per node
+        if ($model->attributes['mics'] !== "") {
+            $cmd = 'qmgr -c "set node ' . $model->attributes['name'] . ' mics=' . $model->attributes['mics'] . '"';
+            $cmd = $sshHost->cmd($cmd);
+            if ($cmd !== "") {
+                array_push($error, $cmd);
+                $cmd = "";
+            }
+        }
+        if (count($error) > 0) {
+            var_dump($error);
+            exit;
+        }
+    }
+    /**
+     * 
+     */
+    public function actionOnline($id) {
+        
+    }
+    /**
+     * 
+     */
+    public function actionOffline($id) {
+        
+    }
+
 }
+
+# End of the NodeController Class
+#End of the NodeController.php file

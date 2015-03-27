@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Application Configuration Details
  * 
@@ -77,15 +78,15 @@ return array(
     'params' => array(
         #this is used in contact page
         'adminEmail' => 'webmaster@example.com',
-    ),
-    /**
-     * Host Configuration details for the SSH Connection
-     * 
-     * @author Rajesh Mayara<rajesh.mayara@locuz.com>
-     * @since 2.0
-     */
-    'hostDetails' => array(
-        'host' => '10.129.154.83',
-        'port' => 22
+        /**
+         * Host Configuration details for the SSH Connection
+         * 
+         * @author Rajesh Mayara<rajesh.mayara@locuz.com>
+         * @since 2.0
+         */
+        'hostDetails' => array(
+            'host' => 'localhost',#'10.129.154.83',
+            'port' => 22
+        ),
     ),
 );

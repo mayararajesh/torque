@@ -23,7 +23,7 @@ $this->menu=array(
 	'attributes'=>array(
 		'name',
 		'np',
-		'gpu',
-		'phi',
+		'gpus',
+		'mics',
 	),
 )); ?>
