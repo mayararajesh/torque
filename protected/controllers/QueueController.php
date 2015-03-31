@@ -1,7 +1,8 @@
 <?php
+
 /**
- * Queue Controller manages the torque sytsem
- * Manages queue properties,resources, user grops etc.,
+ * Queue Controller manages the torque sytsem queue
+ * Manages queue properties,resources, user groups etc.,
  * 
  * @author  Rajesh Mayara<rajesh.mayara@locuz.com>
  * @version 2.0
@@ -16,6 +17,7 @@ class QueueController extends Controller {
      */
     public $layout = '//layouts/column2';
 
+    //--------------------------------------------------------------------------
     /**
      * @return array action filters
      */
@@ -26,6 +28,7 @@ class QueueController extends Controller {
         );
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Specifies the access control rules.
      * This method is used by the 'accessControl' filter.
@@ -51,6 +54,7 @@ class QueueController extends Controller {
         );
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Displays a particular model.
      * @param integer $id the ID of the model to be displayed
@@ -70,6 +74,7 @@ class QueueController extends Controller {
         ));
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Creates a new model.
      * If creation is successful, the browser will be redirected to the 'view' page.
@@ -165,6 +170,7 @@ class QueueController extends Controller {
         ));
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Updates a particular model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -187,6 +193,7 @@ class QueueController extends Controller {
         ));
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Deletes a particular model.
      * If deletion is successful, the browser will be redirected to the 'admin' page.
@@ -200,6 +207,7 @@ class QueueController extends Controller {
             $this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('admin'));
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Lists all models.
      */
@@ -210,6 +218,7 @@ class QueueController extends Controller {
         ));
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Manages all models.
      */
@@ -224,6 +233,7 @@ class QueueController extends Controller {
         ));
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Returns the data model based on the primary key given in the GET variable.
      * If the data model is not found, an HTTP exception will be raised.
@@ -238,6 +248,7 @@ class QueueController extends Controller {
         return $model;
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Performs the AJAX validation.
      * @param Queue $model the model to be validated
@@ -397,5 +408,6 @@ class QueueController extends Controller {
     }
 
 }
+
 # End of the QueueController Class
 # End of the QueueController.php file

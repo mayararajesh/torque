@@ -42,7 +42,7 @@ $this->widget('zii.widgets.CDetailView', array(
 #$url = new CUrlManager();
 ?>
 
-<h1> <?php echo $model->name;?> :: Resources Available </h1>
+<h1> <?php echo $model->name;?> :: <a alt="Resource Available" titile="Edit" href="<?php echo $this->createUrl('queue/resource', array('type' => 'available', 'id' => $model->id)); ?>">Resource Available</a> </h1>
 <?php
 if ($available) {
     $this->widget('zii.widgets.CDetailView', array(
@@ -63,7 +63,7 @@ if ($available) {
     echo "<h4>Not yet added</h4>";
 }
 ?>
-<h1> <?php echo $model->name;?> :: Resources Default </h1>
+<h1> <?php echo $model->name;?> :: <a alt="Resource Default" titile="Edit" href="<?php echo $this->createUrl('queue/resource', array('type' => 'default', 'id' => $model->id)); ?>">Resource Defualt</a> </h1>
 <?php
 if ($default) {
     $this->widget('zii.widgets.CDetailView', array(
@@ -84,7 +84,7 @@ if ($default) {
     echo "<h4>Not yet added</h4>";
 }
 ?>
-<h1> <?php echo $model->name;?> :: Resources Max </h1>
+<h1> <?php echo $model->name;?> :: <a alt="Resource Maximum" titile="Edit" href="<?php echo $this->createUrl('queue/resource', array('type' => 'max', 'id' => $model->id)); ?>">Resource Max</a> </h1>
 <?php
 if ($max) {
     $this->widget('zii.widgets.CDetailView', array(
@@ -105,7 +105,7 @@ if ($max) {
     echo "<h4>Not yet added</h4>";
 }
 ?>
-<h1> <?php echo $model->name;?> :: Resources Min </h1>
+<h1> <?php echo $model->name;?> :: <a alt="Resource Minimum" titile="Edit" href="<?php echo $this->createUrl('queue/resource', array('type' => 'min', 'id' => $model->id)); ?>">Resource Min</a> </h1>
 <?php
 if ($min) {
     $this->widget('zii.widgets.CDetailView', array(
@@ -126,9 +126,3 @@ if ($min) {
     echo "<h4>Not yet added</h4>";
 }
 ?>
-<div class="row">
-    <a href="<?php echo $this->createUrl('queue/resource', array('type' => 'available', 'id' => $model->id)); ?>">Resource Available</a>
-    <a href="<?php echo $this->createUrl('queue/resource', array('type' => 'default', 'id' => $model->id)); ?>">Resource Defualt</a>
-    <a href="<?php echo $this->createUrl('queue/resource', array('type' => 'max', 'id' => $model->id)); ?>">Resource Max</a>
-    <a href="<?php echo $this->createUrl('queue/resource', array('type' => 'min', 'id' => $model->id)); ?>">Resource Min</a>
-</div>
