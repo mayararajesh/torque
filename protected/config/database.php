@@ -4,9 +4,9 @@ return array(
 	#'connectionString' => 'sqlite:'.dirname(__FILE__).'/../data/testdrive.db',
 	# uncomment the following lines to use a MySQL database
 	#'connectionString' => 'mysql:host=localhost;dbname=torque',
-    'connectionString'=>'pgsql:host=localhost;port=5432;dbname=torque',
-	'emulatePrepare' => true,
+    'connectionString'=>'pgsql:host=localhost;dbname=torque;',
+	#'emulatePrepare' => true,
 	'username' => 'root',
-	'password' => '',
+	'password' => 'root123',
 	'charset' => 'utf8',
 );

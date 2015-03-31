@@ -13,10 +13,10 @@
 # CWebApplication properties can be configured here.
 return array(
     'basePath' => dirname(__FILE__) . DIRECTORY_SEPARATOR . '..',
-    'name' => 'GANANA::Torque::Job Submission Portal',
+    'name' => 'Ganana portal',
     'timeZone' => 'Asia/Calcutta',
     #preloading 'log' component
-    'preload' => array('log', 'phpseclib'),
+    'preload' => array('fontawesome','log','jquery'),
     #autoloading model and component classes
     'import' => array(
         'application.models.*',
@@ -40,6 +40,9 @@ return array(
         'viewRenderer' => array(
             'class' => 'CPradoViewRenderer',
         ),
+        'fontawesome' => array(
+            'class' => 'ext.fontawesome.components.FontAwesome',
+        ),
         #uncomment the following to enable URLs in path-format
         'urlManager' => array(
             'urlFormat' => 'path',
@@ -50,17 +53,27 @@ return array(
             ),
         ),
         #database settings are configured in database.php
-        'db' => require(dirname(__FILE__) . '/database.php'),
-        'errorHandler' => array(
-            #use 'site/error' action to display errors
-            'errorAction' => 'site/error',
+//        'db' => require(dirname(__FILE__) . '/database.php'),
+//        'errorHandler' => array(
+//            #use 'site/error' action to display errors
+//            'errorAction' => 'site/error',
+//        ),
+        'db' => array(
+#'connectionString' => 'sqlite:'.dirname(__FILE__).'/../data/testdrive.db',
+# uncomment the following lines to use a MySQL database
+#'connectionString' => 'mysql:host=localhost;dbname=torque',
+            'connectionString' => 'pgsql:host=localhost;dbname=torque;',
+            #'emulatePrepare' => true,
+            'username' => 'root',
+            'password' => 'root123',
+            'charset' => 'utf8',
         ),
         'log' => array(
             'class' => 'CLogRouter',
             'routes' => array(
-                array(
+                /*array(
                     'class' => 'CFileLogRoute',
-                    'levels' => 'trace, info, error, warning, vardump',
+                    'levels' => 'trace, info, error, warning',
                 ),
                 #uncomment the following to show log messages on web pages
                 array(
@@ -69,7 +82,7 @@ return array(
                     'levels' => 'error, warning, trace, notice',
                     'categories' => 'application',
                     'showInFireBug' => TRUE,
-                ),
+                ),*/
             ),
         ),
     ),
@@ -85,8 +98,11 @@ return array(
          * @since 2.0
          */
         'hostDetails' => array(
-            'host' => 'localhost',#'10.129.154.83',
+            'host' => '10.129.154.83',
             'port' => 22
+        ),
+        'torque' => array(
+            'serverPriv' => '/var/spool/torque/server_priv'
         ),
     ),
 );

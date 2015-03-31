@@ -23,9 +23,9 @@ class m150325_100340_create_nodes_table extends CDbMigration {
         $this->createTable('nodes',array(
             'id' => 'pk',
             'name' => 'varchar(255) NOT NULL',
-            'np' => 'int(10) NULL',
-            'gpus' => 'int(10) NULL',
-            'mics' => 'int(10) NULL',
+            'np' => 'int NULL',
+            'gpus' => 'int NULL',
+            'mics' => 'int NULL',
         ));
     }
 

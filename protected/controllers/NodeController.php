@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * Manages the PBS Node(cretes,deletes,updtaes and other)
+ * 
+ * @author Rajesh Mayara<rajesh.mayara@locuz.com>
+ * @version     2.0
+ * @since       2.0
+ */
 class NodeController extends Controller {
 
     /**
@@ -18,6 +25,7 @@ class NodeController extends Controller {
         );
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Specifies the access control rules.
      * This method is used by the 'accessControl' filter.
@@ -43,6 +51,7 @@ class NodeController extends Controller {
         );
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Displays a particular model.
      * @param integer $id the ID of the model to be displayed
@@ -53,16 +62,15 @@ class NodeController extends Controller {
         ));
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Creates a new model.
      * If creation is successful, the browser will be redirected to the 'view' page.
      */
     public function actionCreate() {
         $model = new Node;
-
-// Uncomment the following line if AJAX validation is needed
-// $this->performAjaxValidation($model);
-
+        // Uncomment the following line if AJAX validation is needed
+        // $this->performAjaxValidation($model);
         if (isset($_POST['Node'])) {
             $model->attributes = $_POST['Node'];
             $host = Yii::app()->params->hostDetails['host'];
@@ -73,6 +81,9 @@ class NodeController extends Controller {
                 $cmd = 'qmgr -c "create node ' . $model->attributes['name'] . '"';
                 $cmd = $sshHost->cmd($cmd);
                 if ($cmd === "") {
+                    if ($model->attributes['np'] === "") {
+                        $model->attributes['np'] = 1;
+                    }
                     $this->setNodeProps($sshHost, $model);
                 } else {
                     array_push($error, $cmd);
@@ -92,6 +103,7 @@ class NodeController extends Controller {
         ));
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Updates a particular model.
      * If update is successful, the browser will be redirected to the 'view' page.
@@ -99,9 +111,8 @@ class NodeController extends Controller {
      */
     public function actionUpdate($id) {
         $model = $this->loadModel($id);
-
-// Uncomment the following line if AJAX validation is needed
-// $this->performAjaxValidation($model);
+        // Uncomment the following line if AJAX validation is needed
+        // $this->performAjaxValidation($model);
         $node = $model->attributes['name'];
         #$error = array();
         if (isset($_POST['Node'])) {
@@ -111,18 +122,18 @@ class NodeController extends Controller {
             $port = Yii::app()->params->hostDetails['port'];
             $sshHost = new SSH($host, $port, 'root');
             if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+                $this->setNodeProps($sshHost, $model);
                 if ($model->save()) {
-                    $this->setNodeProps($sshHost, $model);
+                    $this->redirect(array('view', 'id' => $model->id));
                 }
             }
-            $this->redirect(array('view', 'id' => $model->id));
         }
-
         $this->render('update', array(
             'model' => $model,
         ));
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Deletes a particular model.
      * If deletion is successful, the browser will be redirected to the 'admin' page.
@@ -138,11 +149,13 @@ class NodeController extends Controller {
             $sshHost->disconnect();
             $this->loadModel($id)->delete();
         }
-// if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
-        if (!isset($_GET['ajax']))
+        // if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
+        if (!isset($_GET['ajax'])) {
             $this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('admin'));
+        }
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Lists all models.
      */
@@ -153,20 +166,23 @@ class NodeController extends Controller {
         ));
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Manages all models.
      */
     public function actionAdmin() {
         $model = new Node('search');
         $model->unsetAttributes();  // clear any default values
-        if (isset($_GET['Node']))
+        if (isset($_GET['Node'])) {
             $model->attributes = $_GET['Node'];
-
+        }
+        #var_dump($model);exit;
         $this->render('admin', array(
             'model' => $model,
         ));
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Returns the data model based on the primary key given in the GET variable.
      * If the data model is not found, an HTTP exception will be raised.
@@ -181,6 +197,7 @@ class NodeController extends Controller {
         return $model;
     }
 
+    //--------------------------------------------------------------------------
     /**
      * Performs the AJAX validation.
      * @param Node $model the model to be validated
@@ -205,6 +222,7 @@ class NodeController extends Controller {
         $error = array();
         # Number of processors per node
         if ($model->attributes['np'] !== "") {
+
             $cmd = 'qmgr -c "set node ' . $model->attributes['name'] . ' np=' . $model->attributes['np'] . '"';
             $cmd = $sshHost->cmd($cmd);
             if ($cmd !== "") {
@@ -213,12 +231,50 @@ class NodeController extends Controller {
             }
         }
         # Number of gpus per node
-        if ($model->attributes['gpus'] !== "") {
+        if ($model->attributes['gpus'] !== "" && (int) $model->attributes['gpus'] !== 0) {
             $cmd = 'qmgr -c "set node ' . $model->attributes['name'] . ' gpus=' . $model->attributes['gpus'] . '"';
             $cmd = $sshHost->cmd($cmd);
             if ($cmd !== "") {
                 array_push($error, $cmd);
                 $cmd = "";
+            }
+        } else {
+            #var_dump($sshHost->isConnected());
+            $model->attributes['gpus'] = "";
+            $command = $sshHost->cmd("pbsnodes -x " . $model->attributes['name']);
+            #var_dump($command);
+            $commandSyntax = split(':', $command);
+            if ($commandSyntax[0] !== "pbsnodes") {
+                $xmlstring = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" . $command;
+                #echo '<pre>'.$xmlstring."</pre>";exit;
+                $xml = simplexml_load_string($xmlstring);
+                $json = json_encode($xml);
+                $nodeDetails = json_decode($json, TRUE);
+                $nodeDetails = $nodeDetails['Node'];
+                $position = 3;
+                if ((int) $nodeDetails['np'] === 1) {
+                    $position = 2;
+                }
+
+                $cmd = "cat -n " . Yii::app()->params['torque']['serverPriv'] . "/nodes | grep -i " . $model->name . " | awk -F \" \" '{print $1}'";
+                $line = $sshHost->cmd($cmd);
+                if ($line = (int) $line) {
+                    $cmd = "cat " . Yii::app()->params['torque']['serverPriv'] . "/nodes | grep -i " . $model->name . " | awk -F \" \" '{print \$$position}'";
+                    $current = $sshHost->cmd($cmd);
+                    $cusrrentArr = split('=', $current);
+                    if ($cusrrentArr[0] == 'gpus') {
+                        $cmd = "sed -i \"" . $line . "s/" . trim($current) . "/ /\" " . Yii::app()->params['torque']['serverPriv'] . "/nodes";
+
+                        if ($sshHost->cmd($cmd) === "") {
+                            $cmd = "qterm -t quick";
+                            if ($sshHost->cmd($cmd) === "") {
+                                $cmd = "/etc/init.d/pbs_server start";
+                                $sshHost->cmd($cmd);
+                                sleep(10);
+                            }
+                        }
+                    }
+                }
             }
         }
         # Number of mics per node
@@ -235,17 +291,41 @@ class NodeController extends Controller {
             exit;
         }
     }
+
+    //--------------------------------------------------------------------------
     /**
+     * Make PBS node Online
      * 
+     * @since       2.0
      */
     public function actionOnline($id) {
-        
+        $node = $this->loadModel($id);
+        $host = Yii::app()->params->hostDetails['host'];
+        $port = Yii::app()->params->hostDetails['port'];
+        $sshHost = new SSH($host, $port, 'root');
+        if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123') && $node) {
+            $sshHost->cmd('pbsnodes -c ' . $node->name . '');
+            $sshHost->disconnect();
+        }
+        $this->redirect(array('admin'));
     }
+
+    //--------------------------------------------------------------------------
     /**
+     * Make PBS node Offline
      * 
+     * @since       2.0
      */
     public function actionOffline($id) {
-        
+        $node = $this->loadModel($id);
+        $host = Yii::app()->params->hostDetails['host'];
+        $port = Yii::app()->params->hostDetails['port'];
+        $sshHost = new SSH($host, $port, 'root');
+        if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123') && $node) {
+            $sshHost->cmd('pbsnodes -o ' . $node->name . '');
+            $sshHost->disconnect();
+        }
+        $this->redirect(array('admin'));
     }
 
 }

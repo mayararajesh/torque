@@ -4267,3 +4267,5 @@ in /var/www/html/torque/index.php (13)
 in /var/www/html/torque/protected/runtime/views/2ce9b9f0/admin.php (57)
 in /var/www/html/torque/protected/controllers/NodeController.php (167)
 in /var/www/html/torque/index.php (13)
+2015/03/30 12:18:45 [error] [system.db.CDbCommand] CDbCommand::execute() failed: SQLSTATE[42P01]: Undefined table: 7 ERROR:  table "qtype" does not exist. The SQL statement executed was: DROP TABLE qtype.
+2015/03/30 12:24:25 [error] [system.db.CDbCommand] CDbCommand::execute() failed: SQLSTATE[42710]: Duplicate object: 7 ERROR:  type "qtype" already exists. The SQL statement executed was: CREATE TYPE qtype AS ENUM('execution','route').
