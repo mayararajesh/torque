@@ -182,7 +182,7 @@ class QueueController extends Controller {
                 }
                 $sshHost->disconnect();
                 $model->attributes = $attributes;
-                
+
                 if ($model->save(FALSE)) {
                     $this->redirect(array('view', 'id' => $model->id));
                 }
@@ -462,22 +462,17 @@ class QueueController extends Controller {
                     }
                     $commandTime = $tempAttirbutes['walltime_hh'] . ':' . $tempAttirbutes['walltime_mm'] . ':' . $tempAttirbutes['walltime_ss'];
                 }
-
-                #$dataTime = ($tempAttirbutes['walltime_hh'] * 3600) + ($tempAttirbutes['walltime_mm'] * 60) + ($tempAttirbutes['walltime_ss']);
                 unset($tempAttirbutes['walltime_hh']);
                 unset($tempAttirbutes['walltime_mm']);
                 unset($tempAttirbutes['walltime_ss']);
                 $tempAttirbutes['walltime'] = $commandTime;
-                /* echo '<pre>';
-                  echo $commandTime;
-                  var_dump($tempAttirbutes);
-                  exit; */
-                #var_dump($tempAttirbutes['walltime_ss']);
                 foreach ($tempAttirbutes as $key => $value) {
                     if ($value !== NULL) {
                         $cmd = 'qmgr -c "set queue ' . $queue->name . ' ' . $resourceType . '.' . $key . '=' . $value . '"';
-                        array_push($commandArray, $cmd);
+                    } else {
+                        $cmd = 'qmgr -c "unset queue ' . $queue->name . ' ' . $resourceType . '.' . $key . '"';
                     }
+                    array_push($commandArray, $cmd);
                 }
                 $isAtleastOneFieldSet = FALSE;
                 foreach ($tempAttirbutes as $k => $v) {
@@ -506,11 +501,6 @@ class QueueController extends Controller {
                     } else {
                         $tempId = $modelTemp->id;
                     }
-                    # Inserts/Updates according to $isNewData
-                    #echo '<pre>';
-                    #var_dump($isNewData);
-                    #print_r($model->attributes);
-                    #exit;
                     if ($isNewData ? $model->save(FALSE) : $model->updateByPk($tempId, $temp)) {
                         $host = Yii::app()->params->hostDetails['host'];
                         $port = Yii::app()->params->hostDetails['port'];
