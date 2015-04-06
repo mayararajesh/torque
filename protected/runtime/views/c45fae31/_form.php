@@ -4,7 +4,7 @@
 /* @var $model Queue */
 /* @var $form CActiveForm */
 ?>
-
+<?php Yii::app()->clientScript->registerCoreScript('jquery'); ?>
 <div class="form">
 
     <?php
@@ -37,7 +37,7 @@
             'interactive', 'batch', 'rerunable', 'nonrerunable', 'fault_tolerant', 'fault_intolerant', 'job_array'
         );
         foreach ($disallowedType as $value) {
-            if ($modelTemp->isNewRecord && !is_array($model['disallowed_types'])) {
+            if ($modelTemp->isNewRecord) {
                 ?>
                 <input type="checkbox" id="QueuesForm_disallowed_types" name="QueuesForm[disallowed_types][]" value="<?php echo $value; ?>"> <?php echo ucfirst($value); ?><br>
                 <?php
@@ -53,8 +53,7 @@
 
     <div class="row">
         <?php echo $form->labelEx($model, 'enabled'); ?>
-        <?php echo $form->radioButton($model, 'enabled', array('uncheckValue' => NULL, 'value' => '1', 'checked' => 'checked')); ?> Yes
-        <?php echo $form->radioButton($model, 'enabled', array('uncheckValue' => NULL, 'value' => '0')); ?> No
+        <?php echo $form->checkBox($model, 'enabled', array('uncheckValue' => 0, 'value' => 1)); ?>
         <?php echo $form->error($model, 'enabled'); ?>
     </div>
 
@@ -121,44 +120,10 @@
 
     <div class="row">
         <?php echo $form->labelEx($model, 'started'); ?>
-        <?php echo $form->radioButton($model, 'started', array('uncheckValue' => NULL, 'value' => '1', 'checked' => 'checked')); ?> Yes
-        <?php echo $form->radioButton($model, 'started', array('uncheckValue' => NULL, 'value' => '0')); ?> No
+        <?php echo $form->checkBox($model, 'started', array('uncheckValue' => 0, 'value' => 1)); ?>
         <?php echo $form->error($model, 'started'); ?>
     </div>
-    <div class="row">
-        <?php echo $form->labelEx($model, 'acl_group_enable'); ?>
-        <?php echo $form->radioButton($model, 'acl_group_enable', array('uncheckValue' => NULL, 'value' => '1')); ?> Enable
-        <?php echo $form->radioButton($model, 'acl_group_enable', array('uncheckValue' => NULL, 'value' => '0', 'checked' => 'checked')); ?> Disable
-        <?php echo $form->error($model, 'acl_group_enable'); ?>
-    </div>
 
-    <div class="row">
-        <?php echo $form->labelEx($model, 'acl_group_sloppy'); ?>
-        <?php echo $form->radioButton($model, 'acl_group_sloppy', array('uncheckValue' => NULL, 'value' => '1')); ?> Enable
-        <?php echo $form->radioButton($model, 'acl_group_sloppy', array('uncheckValue' => NULL, 'value' => '0', 'checked' => 'checked')); ?> Disable
-        <?php echo $form->error($model, 'acl_group_sloppy'); ?>
-    </div>
-
-    <div class="row">
-        <?php echo $form->labelEx($model, 'acl_logic_or'); ?>
-        <?php echo $form->radioButton($model, 'acl_logic_or', array('uncheckValue' => NULL, 'value' => '1')); ?> Enable
-        <?php echo $form->radioButton($model, 'acl_logic_or', array('uncheckValue' => NULL, 'value' => '0', 'checked' => 'checked')); ?> Disable
-        <?php echo $form->error($model, 'acl_logic_or'); ?>
-    </div>
-
-    <div class="row">
-        <?php echo $form->labelEx($model, 'acl_user_enable'); ?>
-        <?php echo $form->radioButton($model, 'acl_user_enable', array('uncheckValue' => NULL, 'value' => '1')); ?> Enable
-        <?php echo $form->radioButton($model, 'acl_user_enable', array('uncheckValue' => NULL, 'value' => '0', 'checked' => 'checked')); ?> Disable
-        <?php echo $form->error($model, 'acl_user_enable'); ?>
-    </div>
-
-    <div class="row">
-        <?php echo $form->labelEx($model, 'acl_host_enable'); ?>
-        <?php echo $form->radioButton($model, 'acl_host_enable', array('uncheckValue' => NULL, 'value' => '1')); ?> Enable
-        <?php echo $form->radioButton($model, 'acl_host_enable', array('uncheckValue' => NULL, 'value' => '0', 'checked' => 'checked')); ?> Disable
-        <?php echo $form->error($model, 'acl_host_enable'); ?>
-    </div>
     <div style="textalign: center !important;" class="row buttons">
         <?php echo CHtml::submitButton($modelTemp->isNewRecord ? 'Create' : 'Save'); ?>
     </div>

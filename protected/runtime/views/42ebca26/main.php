@@ -18,7 +18,6 @@
     <link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl; ?>/css/fontawesome/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl; ?>/css/custom.css">
 	<title><?php echo CHtml::encode($this->pageTitle); ?></title>
-    <?php Yii::app()->clientScript->registerCoreScript('jquery'); ?>
 </head>
 
 <body>
@@ -58,10 +57,5 @@
 
 </div><!-- page -->
 
-<script type="text/javascript">
-
-$('#content').css('min-height','406px');
-
-</script>
 </body>
 </html>
