@@ -3,7 +3,7 @@
 /* @var $model Queue */
 /* @var $form CActiveForm */
 ?>
-<?php Yii::app()->clientScript->registerCoreScript('jquery'); ?>
+
 <div class="form">
 
     <?php
@@ -19,7 +19,9 @@
 
     <p class="note">Fields with <span class="required">*</span> are required.</p>
 
-    <?php echo $form->errorSummary($model); ?>
+    <?php
+    echo $form->errorSummary($model);
+    ?>
 
     <div class="row">
         <?php echo $form->labelEx($model, 'name'); ?>
@@ -27,22 +29,31 @@
 
         <?php echo $form->error($model, 'name'); ?>
     </div>
-
     <div class="row">
-        <?php echo $form->labelEx($model, 'disallowed_types'); ?>
-        <?php echo $form->checkBox($model,'disallowed_types[]',array('uncheckValue'=>NULL,'value'=>'interactive'));?> Interactive<br>
-        <?php echo $form->checkBox($model,'disallowed_types[]',array('uncheckValue'=>NULL,'value'=>'batch'));?> batch<br>
-        <?php echo $form->checkBox($model,'disallowed_types[]',array('uncheckValue'=>NULL,'value'=>'rerunable'));?> rerunable<br>
-        <?php echo $form->checkBox($model,'disallowed_types[]',array('uncheckValue'=>NULL,'value'=>'nonrerunable'));?> nonrerunable<br>
-        <?php echo $form->checkBox($model,'disallowed_types[]',array('uncheckValue'=>NULL,'value'=>'fault_tolerant'));?> Fault Tolerant<br>
-        <?php echo $form->checkBox($model,'disallowed_types[]',array('uncheckValue'=>NULL,'value'=>'fault_intolerant'));?> Fault Intolerant<br>
-        <?php echo $form->checkBox($model,'disallowed_types[]',array('uncheckValue'=>NULL,'value'=>'job_array'));?> Job Array<br>
-        <?php echo $form->error($model, 'disallowed_types'); ?>
+        <label for="QueuesForm_disallowed_types">Disallowed Types</label> 
+        <?php
+        $disallowedType = array(
+            'interactive', 'batch', 'rerunable', 'nonrerunable', 'fault_tolerant', 'fault_intolerant', 'job_array'
+        );
+        foreach ($disallowedType as $value) {
+            if ($modelTemp->isNewRecord && !is_array($model['disallowed_types'])) {
+                ?>
+                <input type="checkbox" id="QueuesForm_disallowed_types" name="QueuesForm[disallowed_types][]" value="<?php echo $value; ?>"> <?php echo ucfirst($value); ?><br>
+                <?php
+            } else {
+                ?>
+                <input type="checkbox" id="QueuesForm_disallowed_types" name="QueuesForm[disallowed_types][]" value="<?php echo $value; ?>" <?php echo in_array($value, $model['disallowed_types']) ? ' checked="checked"' : ''; ?>> <?php echo ucfirst($value); ?><br>
+                <?php
+            }
+        }
+        ?>
+
     </div>
 
     <div class="row">
         <?php echo $form->labelEx($model, 'enabled'); ?>
-        <?php echo $form->checkBox($model, 'enabled',array('uncheckValue'=>0,'value' => 1)); ?>
+        <?php echo $form->radioButton($model, 'enabled', array('uncheckValue' => NULL, 'value' => '1', 'checked' => 'checked')); ?> Yes
+        <?php echo $form->radioButton($model, 'enabled', array('uncheckValue' => NULL, 'value' => '0')); ?> No
         <?php echo $form->error($model, 'enabled'); ?>
     </div>
 
@@ -96,8 +107,8 @@
 
     <div class="row">
         <?php echo $form->labelEx($model, 'queue_type'); ?>
-        <?php echo $form->radioButton($model, 'queue_type',array('uncheckValue'=>NULL,'value' => 'execution','checked'=>'checked')); ?> Execution
-        <?php echo $form->radioButton($model, 'queue_type',array('uncheckValue'=>NULL,'value' => 'route')); ?> Route
+        <?php echo $form->radioButton($model, 'queue_type', array('uncheckValue' => NULL, 'value' => 'execution', 'checked' => 'checked')); ?> Execution
+        <?php echo $form->radioButton($model, 'queue_type', array('uncheckValue' => NULL, 'value' => 'route')); ?> Route
         <?php echo $form->error($model, 'queue_type'); ?>
     </div>
 
@@ -109,20 +120,49 @@
 
     <div class="row">
         <?php echo $form->labelEx($model, 'started'); ?>
-        <?php echo $form->checkBox($model, 'started',array('uncheckValue'=>0,'value' => 1)); ?>
+        <?php echo $form->radioButton($model, 'started', array('uncheckValue' => NULL, 'value' => '1', 'checked' => 'checked')); ?> Yes
+        <?php echo $form->radioButton($model, 'started', array('uncheckValue' => NULL, 'value' => '0')); ?> No
         <?php echo $form->error($model, 'started'); ?>
     </div>
+    <div class="row">
+        <?php echo $form->labelEx($model, 'acl_group_enable'); ?>
+        <?php echo $form->radioButton($model, 'acl_group_enable', array('uncheckValue' => NULL, 'value' => '1')); ?> Enable
+        <?php echo $form->radioButton($model, 'acl_group_enable', array('uncheckValue' => NULL, 'value' => '0', 'checked' => 'checked')); ?> Disable
+        <?php echo $form->error($model, 'acl_group_enable'); ?>
+    </div>
 
+    <div class="row">
+        <?php echo $form->labelEx($model, 'acl_group_sloppy'); ?>
+        <?php echo $form->radioButton($model, 'acl_group_sloppy', array('uncheckValue' => NULL, 'value' => '1')); ?> Enable
+        <?php echo $form->radioButton($model, 'acl_group_sloppy', array('uncheckValue' => NULL, 'value' => '0', 'checked' => 'checked')); ?> Disable
+        <?php echo $form->error($model, 'acl_group_sloppy'); ?>
+    </div>
+
+    <div class="row">
+        <?php echo $form->labelEx($model, 'acl_logic_or'); ?>
+        <?php echo $form->radioButton($model, 'acl_logic_or', array('uncheckValue' => NULL, 'value' => '1')); ?> Enable
+        <?php echo $form->radioButton($model, 'acl_logic_or', array('uncheckValue' => NULL, 'value' => '0', 'checked' => 'checked')); ?> Disable
+        <?php echo $form->error($model, 'acl_logic_or'); ?>
+    </div>
+
+    <div class="row">
+        <?php echo $form->labelEx($model, 'acl_user_enable'); ?>
+        <?php echo $form->radioButton($model, 'acl_user_enable', array('uncheckValue' => NULL, 'value' => '1')); ?> Enable
+        <?php echo $form->radioButton($model, 'acl_user_enable', array('uncheckValue' => NULL, 'value' => '0', 'checked' => 'checked')); ?> Disable
+        <?php echo $form->error($model, 'acl_user_enable'); ?>
+    </div>
+
+    <div class="row">
+        <?php echo $form->labelEx($model, 'acl_host_enable'); ?>
+        <?php echo $form->radioButton($model, 'acl_host_enable', array('uncheckValue' => NULL, 'value' => '1')); ?> Enable
+        <?php echo $form->radioButton($model, 'acl_host_enable', array('uncheckValue' => NULL, 'value' => '0', 'checked' => 'checked')); ?> Disable
+        <?php echo $form->error($model, 'acl_host_enable'); ?>
+    </div>
     <div style="textalign: center !important;" class="row buttons">
-        <?php echo CHtml::submitButton($model->isNewRecord ? 'Create' : 'Save'); ?>
+        <?php echo CHtml::submitButton($modelTemp->isNewRecord ? 'Create' : 'Save'); ?>
     </div>
 
     <?php $this->endWidget(); ?>
 
-    <?php #echo Yii::app()->getClientScript()->registerCoreScript('jquery.js'); ?>
+    <?php #echo Yii::app()->getClientScript()->registerCoreScript('jquery.js');  ?>
 </div><!-- form -->
-<script type="text/javascript">
-$(document).ready(function(){
-    
-});
-</script>

@@ -21,63 +21,57 @@
         'enableAjaxValidation' => false,
     ));
     ?>
+    <?php
+    foreach (Yii::app()->user->getFlashes() as $key => $message) {
+        echo '<div class="flash-' . $key . '">' . $message . "</div>";
+    }
+    ?>
     <?php echo $form->errorSummary($model); ?>
 
     <div class="row">
         <?php echo $form->labelEx($model, 'arch'); ?>
         <?php echo $form->textField($model, 'arch'); ?>
-
-        <?php echo $form->error($model, 'arch'); ?>
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'mem'); ?>
-        <?php echo $form->textField($model, 'mem[number]'); ?>
-        <?php echo $form->dropDownList($model, 'mem[multiplier]', array('mb' => 'Megabytes', 'gb' => 'Gigabytes', 'tb' => 'Terabytes')); ?>
-        <?php echo $form->error($model, 'mem'); ?>
+        <?php echo $form->textField($model, 'memNumber'); ?>
+        <?php echo $form->dropDownList($model, 'mem_multiplier', array('mb' => 'Megabytes', 'gb' => 'Gigabytes', 'tb' => 'Terabytes')); ?>
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'ncpus'); ?>
         <?php echo $form->textField($model, 'ncpus'); ?>
-
-        <?php echo $form->error($model, 'ncpus'); ?>
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'nodect'); ?>
         <?php echo $form->textField($model, 'nodect'); ?>
-
-        <?php echo $form->error($model, 'nodect'); ?>
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'nodes'); ?>
         <?php echo $form->textField($model, 'nodes'); ?>
-
-        <?php echo $form->error($model, 'nodes'); ?>
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'procct'); ?>
         <?php echo $form->textField($model, 'procct'); ?>
+    </div>
+    <div class="row">
+        <?php echo $form->labelEx($model, 'pvmemNumber'); ?>
+        <?php echo $form->textField($model, 'pvmemNumber'); ?>
+        <?php echo $form->dropDownList($model, 'pvmem_multiplier', array('mb' => 'Megabytes', 'gb' => 'Gigabytes', 'tb' => 'Terabytes')); ?>
 
-        <?php echo $form->error($model, 'procct'); ?>
     </div>
     <div class="row">
-        <?php echo $form->labelEx($model, 'pvmem'); ?>
-        <?php echo $form->textField($model, 'pvmem[number]'); ?>
-        <?php echo $form->dropDownList($model, 'pvmem[multiplier]', array('mb' => 'Megabytes', 'gb' => 'Gigabytes', 'tb' => 'Terabytes')); ?>
-        <?php echo $form->error($model, 'pvmem'); ?>
-    </div>
-    <div class="row">
-        <?php echo $form->labelEx($model, 'vmem'); ?>
-        <?php echo $form->textField($model, 'vmem[number]'); ?>
-        <?php echo $form->dropDownList($model, 'vmem[multiplier]',array('mb' => 'Megabytes', 'gb' => 'Gigabytes', 'tb' => 'Terabytes')); ?>
-        <?php echo $form->error($model, 'vmem'); ?>
+        <?php echo $form->labelEx($model, 'vmemNumber'); ?>
+        <?php echo $form->textField($model, 'vmemNumber'); ?>
+        <?php echo $form->dropDownList($model, 'vmem_multiplier', array('mb' => 'Megabytes', 'gb' => 'Gigabytes', 'tb' => 'Terabytes')); ?>
+
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'walltime'); ?>
-        HH<?php echo $form->textField($model, 'walltime[hh]',array('size'=>5)); ?>:MM<?php echo $form->textField($model, 'walltime[mm]',array('size'=>5)); ?>:SS<?php echo $form->textField($model, 'walltime[ss]',array('size'=>5)); ?>
-        <?php echo $form->error($model, 'walltime'); ?>
+        HH<?php echo $form->textField($model, 'walltime_hh', array('size' => 5)); ?>:MM<?php echo $form->textField($model, 'walltime_mm', array('size' => 5)); ?>:SS<?php echo $form->textField($model, 'walltime_ss', array('size' => 5)); ?>
+
     </div>
     <div class="row buttons">
-        <?php echo CHtml::submitButton(!$mtemp ? 'Create' : 'Save'); ?>
+        <?php echo CHtml::submitButton('Save'); ?>
     </div>
     <?php $this->endWidget(); ?>
 </div>

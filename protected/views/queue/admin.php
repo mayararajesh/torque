@@ -43,7 +43,7 @@ or <b>=</b>) at the beginning of each of your search values to specify how the c
 <?php $this->widget('zii.widgets.grid.CGridView', array(
 	'id'=>'queue-grid',
 	'dataProvider'=>$model->search(),
-	'filter'=>$model,
+	'filter' => $model, 
 	'columns'=>array(
 		'id',
 		'name',
@@ -51,17 +51,6 @@ or <b>=</b>) at the beginning of each of your search values to specify how the c
 		'enabled',
 		'features_required',
 		'keep_completed',
-		/*
-		'kill_delay',
-		'max_queuable',
-		'max_running',
-		'max_user_queuable',
-		'max_user_run',
-		'priority',
-		'queue_type',
-		'required_login_property',
-		'started',
-		*/
 		array(
 			'class'=>'CButtonColumn',
 		),

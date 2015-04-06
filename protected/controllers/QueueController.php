@@ -41,7 +41,7 @@ class QueueController extends Controller {
                 'users' => array('*'),
             ),
             array('allow', // allow authenticated user to perform 'create' and 'update' actions
-                'actions' => array('create', 'update', 'resource'),
+                'actions' => array('create', 'update', 'resource', 'acl'),
                 'users' => array('*'),
             ),
             array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -60,17 +60,29 @@ class QueueController extends Controller {
      * @param integer $id the ID of the model to be displayed
      */
     public function actionView($id) {
+        $model = $this->loadModel($id);
         $resourceAvailable = new ResourcesAvailable();
         $resourceDefault = new ResourcesDefault();
         $resourceMax = new ResourcesMax();
         $resourceMin = new ResourcesMin();
-        $model = $this->loadModel($id);
+        $groups = new AclGroup();
+        $users = new AclUser();
+        $hosts = new AclHost();
+        $attributes['id'] = NULL;
+        $attributes['name'] = NULL;
+        $attributes['queue_id'] = $model->id;
+        $hosts->attributes = $attributes;
+        $users->attributes = $attributes;
+        $groups->attributes = $attributes;
         $this->render('view', array(
             'model' => $model,
             'available' => $resourceAvailable->findByAttributes(array('queue_id' => $model->id)),
             'default' => $resourceDefault->findByAttributes(array('queue_id' => $model->id)),
             'max' => $resourceMax->findByAttributes(array('queue_id' => $model->id)),
             'min' => $resourceMin->findByAttributes(array('queue_id' => $model->id)),
+            'groups' => $groups,
+            'users' => $users,
+            'hosts' => $hosts,
         ));
     }
 
@@ -80,93 +92,106 @@ class QueueController extends Controller {
      * If creation is successful, the browser will be redirected to the 'view' page.
      */
     public function actionCreate() {
-        $model = new Queue;
-
+        $model = new Queue();
+        /* echo '<pre>';
+          print_r($model->isNewRecord);
+          exit; */
+        $formModelObj = new QueuesForm();
         // Uncomment the following line if AJAX validation is needed
         // $this->performAjaxValidation($model);
 
-        if (isset($_POST['Queue'])) {
-            $attributes = $_POST['Queue'];
-            $arrayCmds = array();
-            $host = Yii::app()->params->hostDetails['host'];
-            $port = Yii::app()->params->hostDetails['port'];
-            $sshHost = new SSH($host, $port, 'root');
-            if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
-                if ($attributes['name'] !== "" && $attributes['queue_type'] !== "") {
-                    $cmd = 'qmgr -c "create queue' . $attributes['name'] . ' queue_type=' . $attributes['queue_type'] . '"';
-                    array_push($arrayCmds, $cmd);
-                    if (isset($attributes['disallowed_types'])) {
-                        $tempStr = "";
-                        foreach ($attributes['disallowed_types'] as $attribute) {
-                            $tempStr .= $attribute . ",";
-                            $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' disallowed_types+=' . $attribute . '"';
-                            array_push($arrayCmds, $cmd);
-                        }
-                        $tempStr = trim($tempStr, ",");
-                        unset($attributes['disallowed_types']);
-                        $attributes['disallowed_types'] = $tempStr;
+        if (isset($_POST['QueuesForm'])) {
+            $attributes = $_POST['QueuesForm'];
+            $commandArray = array();
+            $formModelObj->attributes = $attributes;
+            if ($formModelObj->validate()) {
+                $attributes = $formModelObj->attributes;
+                $cmd = 'qmgr -c "create queue ' . $attributes['name'] . ' queue_type=' . $attributes['queue_type'] . '"';
+                array_push($commandArray, $cmd);
+                $tempStr = "";
+                if (isset($attributes['disallowed_types'])) {
+                    foreach ($attributes['disallowed_types'] as $attribute) {
+                        $tempStr .= $attribute . ",";
+                        $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' disallowed_types+=' . $attribute . '"';
+                        array_push($commandArray, $cmd);
                     }
+                    unset($attributes['disallowed_types']);
+                }
+                if ($tempStr !== "") {
+                    $tempStr = trim($tempStr, ",");
+                    $attributes['disallowed_types'] = $tempStr;
                     if (isset($attributes['enabled']) && (int) $attributes['enabled'] === 1) {
                         $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' enabled=true"';
+                        $attributes['enabled'] = TRUE;
                     } else {
                         $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' enabled=false"';
+                        $attributes['enabled'] = FALSE;
                     }
-                    array_push($arrayCmds, $cmd);
-                    if (!isset($attributes['keep_completed'])) {
-                        $attributes['keep_completed'] = 0;
+                    array_push($commandArray, $cmd);
+                }
+                if (!isset($attributes['keep_completed'])) {
+                    $attributes['keep_completed'] = 0;
+                }
+                $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' keep_completed=' . $attributes['keep_completed'] . '"';
+                array_push($commandArray, $cmd);
+                if (!isset($attributes['kill_delay'])) {
+                    $attributes['kill_delay'] = 2;
+                }
+                $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' kill_delay=' . $attributes['kill_delay'] . '"';
+                array_push($commandArray, $cmd);
+                if (isset($attributes['max_queuable']) && $attributes['max_queuable'] !== NULL) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' max_queuable=' . $attributes['max_queuable'] . '"';
+                    array_push($commandArray, $cmd);
+                }
+                if (isset($attributes['max_running']) && $attributes['max_running'] !== NULL) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' max_running=' . $attributes['max_running'] . '"';
+                    array_push($commandArray, $cmd);
+                }
+                if (isset($attributes['max_user_queuable']) && $attributes['max_user_queuable'] !== NULL) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' max_user_queuable=' . $attributes['max_user_queuable'] . '"';
+                    array_push($commandArray, $cmd);
+                }
+                if (isset($attributes['max_user_run']) && $attributes['max_user_run'] !== NULL) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' max_user_run=' . $attributes['max_user_run'] . '"';
+                    array_push($commandArray, $cmd);
+                }
+                if (!isset($attributes['priority'])) {
+                    $attributes['priority'] = 0;
+                }
+                $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' priority=' . $attributes['priority'] . '"';
+                array_push($commandArray, $cmd);
+                if (isset($attributes['require_login_property'])) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' require_login_property=' . $attributes['require_login_property'] . '"';
+                    array_push($commandArray, $cmd);
+                }
+                if (isset($attributes['started']) && (int) $attributes['started'] === 1) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' started=true"';
+                    $attributes['started'] = TRUE;
+                } else {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' started=false"';
+                    $attributes['started'] = FALSE;
+                }
+                array_push($commandArray, $cmd);
+                $host = Yii::app()->params->hostDetails['host'];
+                $port = Yii::app()->params->hostDetails['port'];
+                $sshHost = new SSH($host, $port, 'root');
+                if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+                    foreach ($commandArray as $cmd) {
+                        echo $sshHost->cmd($cmd);
                     }
-                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' keep_completed=' . $attributes['keep_completed'] . '"';
-                    array_push($arrayCmds, $cmd);
-                    if (!isset($attributes['kill_delay'])) {
-                        $attributes['kill_delay'] = 2;
-                    }
-                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' kill_delay=' . $attributes['kill_delay'] . '"';
-                    array_push($arrayCmds, $cmd);
-                    if (isset($attributes['max_queuable'])) {
-                        $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' max_queuable=' . $attributes['max_queuable'] . '"';
-                        array_push($arrayCmds, $cmd);
-                    }
-                    if (isset($attributes['max_running'])) {
-                        $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' max_running=' . $attributes['max_running'] . '"';
-                        array_push($arrayCmds, $cmd);
-                    }
-                    if (isset($attributes['max_user_queuable'])) {
-                        $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' max_user_queuable=' . $attributes['max_user_queuable'] . '"';
-                        array_push($arrayCmds, $cmd);
-                    }
-                    if (isset($attributes['max_user_run'])) {
-                        $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' max_user_run=' . $attributes['max_user_run'] . '"';
-                        array_push($arrayCmds, $cmd);
-                    }
-                    if (!isset($attributes['priority'])) {
-                        $attributes['priority'] = 0;
-                    }
-                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' priority=' . $attributes['priority'] . '"';
-                    array_push($arrayCmds, $cmd);
-                    if (isset($attributes['require_login_property'])) {
-                        $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' require_login_property=' . $attributes['require_login_property'] . '"';
-                        array_push($arrayCmds, $cmd);
-                    }
-                    if (isset($attributes['started']) && (int) $attributes['started'] === 1) {
-                        $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' started=true"';
-                    } else {
-                        $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' started=false"';
-                    }
-                    array_push($arrayCmds, $cmd);
-                    foreach ($arrayCmds as $cmd) {
-                        $sshHost->cmd($cmd);
-                    }
-                    $sshHost->disconnect();
-                    $model->attributes = $attributes;
-                    if ($model->save()) {
-                        $this->redirect(array('view', 'id' => $model->id));
-                    }
+                }
+                $sshHost->disconnect();
+                $model->attributes = $attributes;
+                
+                if ($model->save(FALSE)) {
+                    $this->redirect(array('view', 'id' => $model->id));
                 }
             }
         }
 
         $this->render('create', array(
-            'model' => $model,
+            'model' => $formModelObj,
+            'modelTemp' => $model
         ));
     }
 
@@ -178,18 +203,110 @@ class QueueController extends Controller {
      */
     public function actionUpdate($id) {
         $model = $this->loadModel($id);
-
+        $formModelObj = new QueuesForm();
         // Uncomment the following line if AJAX validation is needed
         // $this->performAjaxValidation($model);
 
-        if (isset($_POST['Queue'])) {
-            $model->attributes = $_POST['Queue'];
-            if ($model->save())
-                $this->redirect(array('view', 'id' => $model->id));
-        }
+        if (isset($_POST['QueuesForm'])) {
+            $commandArray = array();
+            $formModelObj->attributes = $_POST['QueuesForm'];
 
+            if ($formModelObj->validate()) {
+                $attributes = $formModelObj->attributes;
+                $cmd = 'qmgr -c "create queue ' . $attributes['name'] . ' queue_type=' . $attributes['queue_type'] . '"';
+                array_push($commandArray, $cmd);
+                $tempStr = NULL;
+                $dbDisallowedTypes = split(',', $model->disallowed_types);
+                foreach ($dbDisallowedTypes as $attribute) {
+                    if (is_array($attributes['disallowed_types']) && !in_array($attribute, $attributes['disallowed_types'])) {
+                        $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' disallowed_types-=' . $attribute . '"';
+                        array_push($commandArray, $cmd);
+                    }
+                }
+                if (is_array($attributes['disallowed_types'])) {
+                    $tempStr = "";
+                    foreach ($attributes['disallowed_types'] as $attribute) {
+                        $tempStr .= $attribute . ",";
+                        $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' disallowed_types+=' . $attribute . '"';
+                        array_push($commandArray, $cmd);
+                    }
+                }
+                $tempStr = trim($tempStr, ",");
+                unset($attributes['disallowed_types']);
+                $attributes['disallowed_types'] = $tempStr;
+                if (isset($attributes['enabled']) && (int) $attributes['enabled'] === 1) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' enabled=true"';
+                    $attributes['enabled'] = TRUE;
+                } else {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' enabled=false"';
+                    $attributes['enabled'] = FALSE;
+                }
+                array_push($commandArray, $cmd);
+                if (!isset($attributes['keep_completed'])) {
+                    $attributes['keep_completed'] = 0;
+                }
+                $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' keep_completed=' . $attributes['keep_completed'] . '"';
+                array_push($commandArray, $cmd);
+                if (!isset($attributes['kill_delay'])) {
+                    $attributes['kill_delay'] = 2;
+                }
+                $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' kill_delay=' . $attributes['kill_delay'] . '"';
+                array_push($commandArray, $cmd);
+                if (isset($attributes['max_queuable']) && $attributes['max_queuable'] !== NULL) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' max_queuable=' . $attributes['max_queuable'] . '"';
+                    array_push($commandArray, $cmd);
+                }
+                if (isset($attributes['max_running']) && $attributes['max_running'] !== NULL) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' max_running=' . $attributes['max_running'] . '"';
+                    array_push($commandArray, $cmd);
+                }
+                if (isset($attributes['max_user_queuable']) && $attributes['max_user_queuable'] !== NULL) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' max_user_queuable=' . $attributes['max_user_queuable'] . '"';
+                    array_push($commandArray, $cmd);
+                }
+                if (isset($attributes['max_user_run']) && $attributes['max_user_run'] !== NULL) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' max_user_run=' . $attributes['max_user_run'] . '"';
+                    array_push($commandArray, $cmd);
+                }
+                if (!isset($attributes['priority'])) {
+                    $attributes['priority'] = 0;
+                }
+                $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' priority=' . $attributes['priority'] . '"';
+                array_push($commandArray, $cmd);
+                if (isset($attributes['require_login_property'])) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' require_login_property=' . $attributes['require_login_property'] . '"';
+                    array_push($commandArray, $cmd);
+                }
+                if (isset($attributes['started']) && (int) $attributes['started'] === 1) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' started=true"';
+                    $attributes['started'] = TRUE;
+                } else {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' started=false"';
+                    $attributes['started'] = FALSE;
+                }
+                $host = Yii::app()->params->hostDetails['host'];
+                $port = Yii::app()->params->hostDetails['port'];
+                $sshHost = new SSH($host, $port, 'root');
+                if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+                    foreach ($commandArray as $cmd) {
+                        echo $sshHost->cmd($cmd);
+                    }
+                }
+                $sshHost->disconnect();
+                $model->attributes = $attributes;
+                if ($model->save()) {
+                    $this->redirect(array('view', 'id' => $model->id));
+                }
+            }
+        } else {
+            $attributes = $model->attributes;
+            unset($attributes['id']);
+            $attributes['disallowed_types'] = split(',', $attributes['disallowed_types']);
+            $formModelObj->attributes = $attributes;
+        }
         $this->render('update', array(
-            'model' => $model,
+            'model' => $formModelObj,
+            'modelTemp' => $model,
         ));
     }
 
@@ -200,11 +317,20 @@ class QueueController extends Controller {
      * @param integer $id the ID of the model to be deleted
      */
     public function actionDelete($id) {
-        $this->loadModel($id)->delete();
-
+        $model = $this->loadModel($id);
+        $host = Yii::app()->params->hostDetails['host'];
+        $port = Yii::app()->params->hostDetails['port'];
+        $sshHost = new SSH($host, $port, 'root');
+        if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+            $cmd = 'qmgr -c "delete queue ' . $model->name . '"';
+            $sshHost->cmd($cmd);
+        }
+        $sshHost->disconnect();
+        $model->delete();
         // if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
-        if (!isset($_GET['ajax']))
-            $this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('admin'));
+        if (!isset($_GET['ajax'])) {
+            $this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('index'));
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -278,7 +404,7 @@ class QueueController extends Controller {
         if ($type == 'available') {
             $model = new ResourcesAvailable();
             $postString = 'ResourcesAvailable';
-            $resourceType = 'resources_availble';
+            $resourceType = 'resources_available';
         } else if ($type == 'default') {
             $model = new ResourcesDefault();
             $postString = 'ResourcesDefault';
@@ -294,116 +420,274 @@ class QueueController extends Controller {
         }
         $data = $model->findByAttributes(array('queue_id' => $queue->id));
         $modelTemp = $data ? $data : NULL;
-        if (isset($_POST[$postString])) {
+        $resourceModelObj = new ResorcesForm();
+        if (isset($_POST['ResorcesForm'])) {
             $commandArray = array();
-            $attributes = $_POST[$postString];
-            if (isset($attributes['arch']) && $attributes['arch'] !== "") {
-                $cmd = 'qmgr -c "set queue ' . $queue->name . ' ' . $resourceType . '.arch=' . $attributes['arch'] . '"';
-                array_push($commandArray, $cmd);
-            }
-            if (isset($attributes['mem']) && $attributes['mem']['number'] !== "" && $attributes['mem']['multiplier'] !== "") {
-                #$multiplier = 1;
-                if ($attributes['mem']['multiplier'] === "mb") {
-                    $attributes['mem'] = (int) $attributes['mem']['number'] . 'mb';
-                } else if ($attributes['mem']['multiplier'] === "gb") {
-                    $attributes['mem'] = (int) $attributes['mem']['number'] . 'gb';
-                } else if ($attributes['mem']['multiplier'] === "tb") {
-                    $attributes['mem'] = (int) $attributes['mem']['number'] . 'tb';
+            $tempAttirbutes = $_POST['ResorcesForm'];
+            $resourceModelObj->attributes = $tempAttirbutes;
+            if ($resourceModelObj->validate()) {
+                $tempAttirbutes = $resourceModelObj->attributes;
+                if ($tempAttirbutes['memNumber'] !== NULL) {
+                    $tempAttirbutes['mem'] = $tempAttirbutes['memNumber'] . $tempAttirbutes['mem_multiplier'];
                 }
-                #$attributes['mem'] = (int) $attributes['mem']['number'] * $multiplier;
-                $cmd = 'qmgr -c "set queue ' . $queue->name . ' ' . $resourceType . '.mem=' . $attributes['mem'] . 'b"';
-                array_push($commandArray, $cmd);
-            }
-            if (isset($attributes['pvmem']) && $attributes['pvmem']['number'] !== "" && $attributes['pvmem']['multiplier'] !== "") {
-                if ($attributes['pvmem']['multiplier'] === "MB") {
-                    $attributes['pvmem'] = (int) $attributes['pvmem']['number'] . 'mb';
-                } else if ($attributes['pvmem']['multiplier'] === "GB") {
-                    $attributes['pvmem'] = (int) $attributes['pvmem']['number'] . 'gb';
-                } else if ($attributes['pvmem']['multiplier'] === "TB") {
-                    $attributes['pvmem'] = (int) $attributes['pvmem']['number'] . 'tb';
+                if ($tempAttirbutes['vmemNumber'] !== NULL) {
+                    $tempAttirbutes['vmem'] = $tempAttirbutes['vmemNumber'] . $tempAttirbutes['vmem_multiplier'];
                 }
-                $cmd = 'qmgr -c "set queue ' . $queue->name . ' ' . $resourceType . '.pvmem=' . $attributes['pvmem'] . 'b"';
-                array_push($commandArray, $cmd);
-            }
-            if (isset($attributes['vmem']) && $attributes['vmem']['number'] !== "" && $attributes['vmem']['multiplier'] !== "") {
-                if ($attributes['vmem']['multiplier'] === "MB") {
-                    $attributes['vmem'] = (int) $attributes['vmem']['number'] . 'mb';
-                } else if ($attributes['vmem']['multiplier'] === "GB") {
-                    $attributes['vmem'] = (int) $attributes['vmem']['number'] . 'gb';
-                } else if ($attributes['vmem']['multiplier'] === "TB") {
-                    $attributes['vmem'] = (int) $attributes['vmem']['number'] . 'tb';
+                if ($tempAttirbutes['pvmemNumber'] !== NULL) {
+                    $tempAttirbutes['pvmem'] = $tempAttirbutes['pvmemNumber'] . $tempAttirbutes['pvmem_multiplier'];
                 }
-                #$attributes['vmem'] = (int) $attributes['vmem']['number'] * $multiplier;
-                $cmd = 'qmgr -c "set queue ' . $queue->name . ' ' . $resourceType . '.vmem=' . $attributes['vmem'] . 'b"';
-                array_push($commandArray, $cmd);
-            }
-            if (isset($attributes['ncpus']) && $attributes['ncpus'] !== "") {
-                $cmd = 'qmgr -c "set queue ' . $queue->name . ' ' . $resourceType . '.ncpus=' . $attributes['ncpus'] . '"';
-                array_push($commandArray, $cmd);
-            }
-            if (isset($attributes['nodect']) && $attributes['nodect'] !== "") {
-                $cmd = 'qmgr -c "set queue ' . $queue->name . ' ' . $resourceType . '.nodect=' . $attributes['nodect'] . '"';
-                array_push($commandArray, $cmd);
-            }
-            if (isset($attributes['nodes']) && $attributes['nodes'] !== "") {
-                $cmd = 'qmgr -c "set queue ' . $queue->name . ' ' . $resourceType . '.nodes=' . $attributes['nodes'] . '"';
-                array_push($commandArray, $cmd);
-            }
-            if (isset($attributes['procct']) && $attributes['procct'] !== "") {
-                $cmd = 'qmgr -c "set queue ' . $queue->name . ' ' . $resourceType . '.procct=' . $attributes['procct'] . '"';
-                array_push($commandArray, $cmd);
-            }
-            if (isset($attributes['walltime']) && ($attributes['walltime']['hh'] !== "" || $attributes['walltime']['mm'] !== "" || $attributes['walltime']['ss'] !== "")) {
-                $hoursInSeconds = ($attributes['walltime']['hh'] === "" ? 0 : (int) $attributes['walltime']['hh'] * 60 * 60);
-                $minsInSeconds = ($attributes['walltime']['mm'] === "" ? 0 : (int) $attributes['walltime']['mm'] * 60);
-                $seconds = ($attributes['walltime']['ss'] === "" ? 0 : (int) $attributes['walltime']['ss']);
-                $totalSeconds = $hoursInSeconds + $minsInSeconds + $seconds;
-                $attributes['walltime'] = $totalSeconds;
-                $commandTime = (($attributes['walltime']['hh'] === "") ? '00' : $attributes['walltime']['hh'])
-                        . ':' . (($attributes['walltime']['mm'] === "") ? '00' : $attributes['walltime']['mm'])
-                        . ':' . (($attributes['walltime']['ss'] === "") ? '00' : $attributes['walltime']['ss']);
-                $cmd = 'qmgr -c "set queue ' . $queue->name . ' ' . $resourceType . '.walltime=' . $commandTime . '"';
-                array_push($commandArray, $cmd);
-            }
-            $attributes['queue_id'] = $queue->id;
-            $model->attributes = $attributes;
-            if ($model->save()) {
-                $this->redirect(array('view', 'id' => $queue->id));
+                unset($tempAttirbutes['memNumber']);
+                unset($tempAttirbutes['vmemNumber']);
+                unset($tempAttirbutes['pvmemNumber']);
+                unset($tempAttirbutes['mem_multiplier']);
+                unset($tempAttirbutes['vmem_multiplier']);
+                unset($tempAttirbutes['pvmem_multiplier']);
+                $commandTime = NULL;
+                $dataTime = NULL;
+
+                if ($tempAttirbutes['walltime_hh'] == NULL && $tempAttirbutes['walltime_mm'] == NULL && $tempAttirbutes['walltime_ss'] == NULL) {
+                    $commandTime = NULL;
+                    $cmd = 'qmgr -c "unset queue ' . $queue->name . ' ' . $resourceType . '.walltime"';
+                    #echo $cmd;
+                    array_push($commandArray, $cmd);
+                } else {
+                    if ($tempAttirbutes['walltime_hh'] == NULL) {
+                        $tempAttirbutes['walltime_hh'] = '00';
+                    }
+                    if ($tempAttirbutes['walltime_mm'] == NULL) {
+                        $tempAttirbutes['walltime_mm'] = '00';
+                    }
+                    if ($tempAttirbutes['walltime_ss'] == NULL) {
+                        $tempAttirbutes['walltime_ss'] = '00';
+                    }
+                    $commandTime = $tempAttirbutes['walltime_hh'] . ':' . $tempAttirbutes['walltime_mm'] . ':' . $tempAttirbutes['walltime_ss'];
+                }
+
+                #$dataTime = ($tempAttirbutes['walltime_hh'] * 3600) + ($tempAttirbutes['walltime_mm'] * 60) + ($tempAttirbutes['walltime_ss']);
+                unset($tempAttirbutes['walltime_hh']);
+                unset($tempAttirbutes['walltime_mm']);
+                unset($tempAttirbutes['walltime_ss']);
+                $tempAttirbutes['walltime'] = $commandTime;
+                /* echo '<pre>';
+                  echo $commandTime;
+                  var_dump($tempAttirbutes);
+                  exit; */
+                #var_dump($tempAttirbutes['walltime_ss']);
+                foreach ($tempAttirbutes as $key => $value) {
+                    if ($value !== NULL) {
+                        $cmd = 'qmgr -c "set queue ' . $queue->name . ' ' . $resourceType . '.' . $key . '=' . $value . '"';
+                        array_push($commandArray, $cmd);
+                    }
+                }
+                $isAtleastOneFieldSet = FALSE;
+                foreach ($tempAttirbutes as $k => $v) {
+                    if ($v !== NULL) {
+                        $isAtleastOneFieldSet = TRUE;
+                        break;
+                    }
+                }
+                if ($isAtleastOneFieldSet) {
+                    $tempAttirbutes['queue_id'] = $queue->id;
+                    $temp['queue_id'] = $tempAttirbutes['queue_id'];
+                    $temp['arch'] = $tempAttirbutes['arch'];
+                    $temp['mem'] = isset($tempAttirbutes['mem']) ? $tempAttirbutes['mem'] : NULL;
+                    $temp['ncpus'] = $tempAttirbutes['ncpus'];
+                    $temp['nodect'] = $tempAttirbutes['nodect'];
+                    $temp['procct'] = $tempAttirbutes['procct'];
+                    $temp['nodes'] = $tempAttirbutes['nodes'];
+                    $temp['pvmem'] = isset($tempAttirbutes['pvmem']) ? $tempAttirbutes['pvmem'] : NULL;
+                    $temp['vmem'] = isset($tempAttirbutes['vmem']) ? $tempAttirbutes['vmem'] : NULL;
+                    $temp['walltime'] = $tempAttirbutes['walltime'];
+                    $model->attributes = $temp;
+                    $isNewData = FALSE;
+                    $tempId = NULL;
+                    if ($modelTemp === NULL) {
+                        $isNewData = TRUE;
+                    } else {
+                        $tempId = $modelTemp->id;
+                    }
+                    # Inserts/Updates according to $isNewData
+                    #echo '<pre>';
+                    #var_dump($isNewData);
+                    #print_r($model->attributes);
+                    #exit;
+                    if ($isNewData ? $model->save(FALSE) : $model->updateByPk($tempId, $temp)) {
+                        $host = Yii::app()->params->hostDetails['host'];
+                        $port = Yii::app()->params->hostDetails['port'];
+                        $sshHost = new SSH($host, $port, 'root');
+                        if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+                            foreach ($commandArray as $cmd) {
+                                Yii::app()->user->setFlash('notice', $sshHost->cmd($cmd));
+                            }
+                        }
+                        $sshHost->disconnect();
+                        $this->redirect(array('view', 'id' => $queue->id));
+                    } else {
+                        Yii::app()->user->setFlash('notice', "Something goes wrong.Please try again.");
+                    }
+                } else {
+                    Yii::app()->user->setFlash('error', "You need to fill atleast one of the following details.");
+                }
             }
         } else {
             if ($modelTemp) {
                 $attributes['arch'] = $modelTemp->arch;
                 $memory = $modelTemp->mem;
                 if ($memory) {
-                    $attributes['mem']['number'] = (int) $memory;
-                    $attributes['mem']['multiplier'] = substr($memory, strlen('' . $attributes['mem']['number']), strlen($memory));
+                    $attributes['memNumber'] = (int) $memory;
+                    $attributes['mem_ultiplier'] = substr($memory, strlen('' . $attributes['memNumber']), strlen($memory));
                 }
                 $memory = $modelTemp->pvmem;
                 if ($memory) {
-                    $attributes['pvmem']['number'] = (int) $memory;
-                    $attributes['pvmem']['multiplier'] = substr($memory, strlen('' . $attributes['pvmem']['number']), strlen($memory));
+                    $attributes['pvmemNumber'] = (int) $memory;
+                    $attributes['pvmem_multiplier'] = substr($memory, strlen('' . $attributes['pvmemNumber']), strlen($memory));
                 }
                 $memory = $modelTemp->vmem;
                 if ($memory) {
-                    $attributes['vmem']['number'] = (int) $memory;
-                    $attributes['vmem']['multiplier'] = substr($memory, strlen('' . $attributes['vmem']['number']), strlen($memory));
+                    $attributes['vmemNumber'] = (int) $memory;
+                    $attributes['vmem_multiplier'] = substr($memory, strlen('' . $attributes['vmemNumber']), strlen($memory));
                 }
                 $attributes['ncpus'] = $modelTemp->ncpus;
                 $attributes['nodect'] = $modelTemp->nodect;
                 $attributes['nodes'] = $modelTemp->nodes;
                 $attributes['procct'] = $modelTemp->procct;
-                $walltime = (int) $modelTemp->walltime;
-                $attributes['walltime']['hh'] = floor($walltime / 3600);
-                $attributes['walltime']['mm'] = floor(($walltime - (int) $attributes['walltime']['hh']) / 60);
-                $attributes['walltime']['ss'] = $walltime - ((int) $attributes['walltime']['hh'] * 3600) - ((int) $attributes['walltime']['mm'] * 60);
-                $model->attributes = $attributes;
+                if ($modelTemp->walltime !== NULL || $modelTemp->walltime === "") {
+                    $walltime = split(':', $modelTemp->walltime);
+                    $attributes['walltime_hh'] = isset($walltime[0]) ? $walltime[0] : '00';
+                    $attributes['walltime_mm'] = isset($walltime[1]) ? $walltime[1] : '00';
+                    $attributes['walltime_ss'] = isset($walltime[2]) ? $walltime[2] : '00';
+                } else {
+                    $attributes['walltime_hh'] = "";
+                    $attributes['walltime_mm'] = "";
+                    $attributes['walltime_ss'] = "";
+                }
+                $attributes['queue_id'] = $modelTemp->queue_id;
+                $attributes['id'] = $modelTemp->id;
+                $resourceModelObj->attributes = $attributes;
             }
         }
         $this->render('resource_form', array(
-            'model' => $model,
+            'model' => $resourceModelObj,
             'queue' => $queue,
             'type' => ucfirst($type),
             'mtemp' => $modelTemp,
+        ));
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Manages the ACL Controls of Queue like acl_[users|groups|hosts]
+     */
+    public function actionAcl($type, $id, $action = NULL, $aclId = NULL) {
+        if ($type == NULL || $id == NULL) {
+            echo "Invalid Request";
+            exit;
+        }
+        $commandArray = array();
+        $data = NULL;
+        $resourceType = "";
+        $modelTemp = new AclForm();
+        switch ($type) {
+            case 'groups':
+                $modelForm = new AclGroup();
+                $postString = 'AclGroup';
+                $resourceType = 'acl_groups';
+                break;
+            case 'users':
+                $modelForm = new AclUser();
+                $postString = 'AclUser';
+                $resourceType = 'acl_users';
+                break;
+            case 'hosts':
+                $modelForm = new AclHost();
+                $postString = 'AclHost';
+                $resourceType = 'acl_hosts';
+                break;
+        }
+        $model = $this->loadModel($id);
+        $params = array('model' => $modelTemp, 'queue' => $model, 'data' => $modelForm, 'type' => $type);
+        if (isset($_POST['AclForm'])) {
+            $attributes['queue_id'] = (int) $model->id;
+            $attributes = array_merge($attributes, $_POST['AclForm']);
+            $modelTemp->attributes = $attributes;
+
+            #print_r($model->attributes);
+            #print_r($modelForm->attributes);
+            #exit;
+            if ($modelTemp->validate()) {
+                // form inputs are valid, do something here
+
+                $temp = array(
+                    #'id' => $aclId,
+                    'queue_id' => $model->id,
+                    'name' => $attributes['name']
+                );
+                $modelForm->attributes = $temp;
+                if ($aclId === NULL) {
+                    $aclId = 0;
+                }
+                $cmd = 'qmgr -c "set queue ' . $model->name . ' ' . $resourceType . '+=' . $temp['name'] . '"';
+                array_push($commandArray, $cmd);
+                $host = Yii::app()->params->hostDetails['host'];
+                $port = Yii::app()->params->hostDetails['port'];
+                $sshHost = new SSH($host, $port, 'root');
+                if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+                    foreach ($commandArray as $cmd) {
+                        Yii::app()->user->setFlash('notice', $sshHost->cmd($cmd));
+                    }
+                }
+                $sshHost->disconnect();
+                if ((int) $modelForm->countByAttributes(array(), 'id=' . $aclId) > 0) {
+                    #Updation of the ACL Information
+                    if ($modelForm->updateAll($temp, 'id=' . $aclId) > 0) {
+                        $this->redirect(array('view', 'id' => $model->id));
+                    }
+                } else {
+                    #Insertion of ACL Information
+                    if ($modelForm->save(FALSE)) {
+                        $this->redirect(array('view', 'id' => $model->id));
+                    }
+                }
+            }
+        } else if ($action === 'delete' && $aclId !== NULL) {
+            #
+            unset($modelForm);
+            switch ($type) {
+                case 'groups':
+                    $modelForm = new AclGroup();
+                    break;
+                case 'users':
+                    $modelForm = new AclUser();
+                    break;
+                case 'hosts':
+                    $modelForm = new AclHost();
+                    break;
+            }
+            $modelForm = $modelForm->findByPk($aclId);
+            $cmd = 'qmgr -c "set queue ' . $model->name . ' ' . $resourceType . '-=' . $modelForm->name . '"';
+            array_push($commandArray, $cmd);
+            $host = Yii::app()->params->hostDetails['host'];
+            $port = Yii::app()->params->hostDetails['port'];
+            $sshHost = new SSH($host, $port, 'root');
+            if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+                foreach ($commandArray as $cmd) {
+                    Yii::app()->user->setFlash('notice', $sshHost->cmd($cmd));
+                }
+            }
+            if ($modelForm->deleteByPk($aclId)) {
+                Yii::app()->user->setFlash('success', 'acl item has been deleted successfully.');
+            } else {
+                Yii::app()->user->setFlash('error', 'something goes wrong.Please try again.');
+            }
+            #die('here');
+            $this->redirect(array('view', 'id' => $model->id));
+        }
+        $this->render('acl_form', array(
+            'model' => $modelTemp,
+            'queue' => $model,
+            'type' => $type,
+            'data' => $modelForm,
+            'action' => $action,
         ));
     }
 
