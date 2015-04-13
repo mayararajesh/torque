@@ -93,13 +93,9 @@ class QueueController extends Controller {
      */
     public function actionCreate() {
         $model = new Queue();
-        /* echo '<pre>';
-          print_r($model->isNewRecord);
-          exit; */
         $formModelObj = new QueuesForm();
         // Uncomment the following line if AJAX validation is needed
         // $this->performAjaxValidation($model);
-
         if (isset($_POST['QueuesForm'])) {
             $attributes = $_POST['QueuesForm'];
             $commandArray = array();
@@ -120,15 +116,15 @@ class QueueController extends Controller {
                 if ($tempStr !== "") {
                     $tempStr = trim($tempStr, ",");
                     $attributes['disallowed_types'] = $tempStr;
-                    if (isset($attributes['enabled']) && (int) $attributes['enabled'] === 1) {
-                        $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' enabled=true"';
-                        $attributes['enabled'] = TRUE;
-                    } else {
-                        $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' enabled=false"';
-                        $attributes['enabled'] = FALSE;
-                    }
-                    array_push($commandArray, $cmd);
                 }
+                if (isset($attributes['enabled']) && (int) $attributes['enabled'] === 1) {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' enabled=true"';
+                    $attributes['enabled'] = TRUE;
+                } else {
+                    $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' enabled=false"';
+                    $attributes['enabled'] = FALSE;
+                }
+                array_push($commandArray, $cmd);
                 if (!isset($attributes['keep_completed'])) {
                     $attributes['keep_completed'] = 0;
                 }
@@ -213,25 +209,23 @@ class QueueController extends Controller {
 
             if ($formModelObj->validate()) {
                 $attributes = $formModelObj->attributes;
-                $cmd = 'qmgr -c "create queue ' . $attributes['name'] . ' queue_type=' . $attributes['queue_type'] . '"';
-                array_push($commandArray, $cmd);
                 $tempStr = NULL;
                 $dbDisallowedTypes = split(',', $model->disallowed_types);
+                $tempStr = "";
                 foreach ($dbDisallowedTypes as $attribute) {
-                    if (is_array($attributes['disallowed_types']) && !in_array($attribute, $attributes['disallowed_types'])) {
+                    if (!empty($attribute)) {
                         $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' disallowed_types-=' . $attribute . '"';
                         array_push($commandArray, $cmd);
                     }
                 }
                 if (is_array($attributes['disallowed_types'])) {
-                    $tempStr = "";
                     foreach ($attributes['disallowed_types'] as $attribute) {
                         $tempStr .= $attribute . ",";
                         $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' disallowed_types+=' . $attribute . '"';
                         array_push($commandArray, $cmd);
                     }
+                    $tempStr = trim($tempStr, ",");
                 }
-                $tempStr = trim($tempStr, ",");
                 unset($attributes['disallowed_types']);
                 $attributes['disallowed_types'] = $tempStr;
                 if (isset($attributes['enabled']) && (int) $attributes['enabled'] === 1) {
@@ -289,7 +283,7 @@ class QueueController extends Controller {
                 $sshHost = new SSH($host, $port, 'root');
                 if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
                     foreach ($commandArray as $cmd) {
-                        echo $sshHost->cmd($cmd);
+                        echo $sshHost->cmd($cmd) . "<br />";
                     }
                 }
                 $sshHost->disconnect();
@@ -322,12 +316,19 @@ class QueueController extends Controller {
         $port = Yii::app()->params->hostDetails['port'];
         $sshHost = new SSH($host, $port, 'root');
         if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
-            $cmd = 'qmgr -c "delete queue ' . $model->name . '"';
-            $sshHost->cmd($cmd);
+            $response = $sshHost->cmd('qmgr -c "delete queue ' . $model->name . '"');
+            $tag = 'success';
+            $message = "Queue '" . $model->name . "' successfully deleted.";
+            if ($response !== "") {
+                $tag = 'error';
+                $message = $response;
+            } else {
+                $model->delete();
+            }
+            Yii::app()->user->setFlash($tag, $message);
         }
         $sshHost->disconnect();
-        $model->delete();
-        // if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
+        # if AJAX request (triggered by deletion via admin grid view), we should not redirect the browser
         if (!isset($_GET['ajax'])) {
             $this->redirect(isset($_POST['returnUrl']) ? $_POST['returnUrl'] : array('index'));
         }
@@ -639,6 +640,21 @@ class QueueController extends Controller {
                     }
                 }
             }
+        } else if ($action === "edit" && $aclId !== NULL) {
+            unset($modelForm);
+            switch ($type) {
+                case 'groups':
+                    $modelForm = new AclGroup();
+                    break;
+                case 'users':
+                    $modelForm = new AclUser();
+                    break;
+                case 'hosts':
+                    $modelForm = new AclHost();
+                    break;
+            }
+            $modelForm = $modelForm->findByPk($aclId);
+            $modelTemp->attributes = $modelForm->attributes;
         } else if ($action === 'delete' && $aclId !== NULL) {
             #
             unset($modelForm);
@@ -653,6 +669,7 @@ class QueueController extends Controller {
                     $modelForm = new AclHost();
                     break;
             }
+
             $modelForm = $modelForm->findByPk($aclId);
             $cmd = 'qmgr -c "set queue ' . $model->name . ' ' . $resourceType . '-=' . $modelForm->name . '"';
             array_push($commandArray, $cmd);

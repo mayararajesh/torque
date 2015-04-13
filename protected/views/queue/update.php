@@ -10,7 +10,7 @@ $this->breadcrumbs = array(
 
 $this->menu = array(
     array('label' => 'List Queue', 'url' => array('index')),
-    array('label' => 'Create Queue', 'url' => array('create')),
+    array('label' => 'Add Queue', 'url' => array('create')),
     array('label' => 'View Queue', 'url' => array('view', 'id' => $modelTemp->id)),
     array('label' => 'Manage Queue', 'url' => array('admin')),
 );

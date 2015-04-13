@@ -36,14 +36,13 @@ class QueuesForm extends CFormModel {
         // NOTE: you should only define rules for those attributes that
         // will receive user inputs.
         return array(
-            array('name,priority', 'required'),
+            array('name,priority,enabled,started,queue_type', 'required'),
+            #array('name','contraints','readOnly'=>true, 'on'=>'update'),
+            array('acl_host_enable,acl_group_enable,acl_group_sloppy,acl_logic_or,acl_user_enable', 'default','setOnEmpty'=>TRUE,'value'=>'0'),
             array('keep_completed, kill_delay, max_queuable, max_running, max_user_queuable, max_user_run, priority', 'numerical', 'integerOnly' => true),
             array('name, required_login_property', 'length', 'max' => 128),
             array('features_required', 'length', 'max' => 30),
-            array('disallowed_types,features_required,keep_completed, kill_delay,max_queuable, max_running, max_user_queuable, max_user_run', 'default', 'setOnEmpty' => true, 'value' => NULL),
-            array('enabled,started,acl_group_enable,acl_group_sloppy,acl_logic_or,acl_user_enable', 'default', 'setOnEmpty' => TRUE, 'value' => FALSE),
-            array('acl_host_enable', 'default', 'setOnEmpty' => TRUE, 'value' => TRUE),
-            array('queue_type', 'default', 'setOnEmpty' => TRUE, 'value' => 'execution'),
+            array('required_login_property,disallowed_types,features_required,keep_completed, kill_delay,max_queuable, max_running, max_user_queuable, max_user_run', 'default', 'setOnEmpty' => true, 'value' => NULL),
         );
     }
 

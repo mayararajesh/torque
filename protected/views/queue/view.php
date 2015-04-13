@@ -13,8 +13,8 @@ foreach (Yii::app()->user->getFlashes() as $key => $message) {
 }
 $this->menu = array(
     array('label' => 'List Queue', 'url' => array('index')),
-    array('label' => 'Create Queue', 'url' => array('create')),
-    array('label' => 'Update Queue', 'url' => array('update', 'id' => $model->id)),
+    array('label' => 'Add Queue', 'url' => array('create')),
+    array('label' => 'Edit Queue', 'url' => array('update', 'id' => $model->id)),
     array('label' => 'Delete Queue', 'url' => '#', 'linkOptions' => array('submit' => array('delete', 'id' => $model->id), 'confirm' => 'Are you sure you want to delete this item?')),
     array('label' => 'Manage Queue', 'url' => array('admin')),
 );
@@ -181,7 +181,7 @@ if ($min) {
                             'imageUrl' => false,
                             'url' => '$this->grid->controller->createUrl("/queue/acl/".$data->queue_id."?type=groups&action=edit&aclId=$data->primaryKey")',
                             'options' => array(
-                                'title' => 'Edit Host',
+                                'title' => 'Edit Group',
                                 'class' => 'editAcl'
                             ),
                         ),
@@ -191,7 +191,7 @@ if ($min) {
                             'linkOptions' => array('submit' => array('acl?type=hosts&action=delete', 'id' => $model->id), 'confirm' => 'Are you sure you want to delete this item?'),
                             'url' => '$this->grid->controller->createUrl("/queue/acl/".$data->queue_id."?type=groups&action=delete&aclId=$data->primaryKey")',
                             'options' => array(
-                                'title' => 'Delete Host',
+                                'title' => 'Delete Group',
                                 'class' => 'deleteAcl'
                             ),
                         ),
@@ -235,17 +235,17 @@ if ($min) {
                             'imageUrl' => false,
                             'url' => '$this->grid->controller->createUrl("/queue/acl/".$data->queue_id."?type=users&action=edit&aclId=$data->primaryKey")',
                             'options' => array(
-                                'title' => 'Edit Host',
+                                'title' => 'Edit User',
                                 'class' => 'editAcl'
                             ),
                         ),
                         'Delete' => array(
-                            'label' => '<i class="font-icon font-icon-status fa fa-times-circle"></i>',
+                            'label' => '<i class="font-icon font-icon-status fa fa-user-times"></i>',
                             'imageUrl' => false,
                             'linkOptions' => array('submit' => array('acl?type=hosts&action=delete', 'id' => $model->id), 'confirm' => 'Are you sure you want to delete this item?'),
                             'url' => '$this->grid->controller->createUrl("/queue/acl/".$data->queue_id."?type=users&action=delete&aclId=$data->primaryKey")',
                             'options' => array(
-                                'title' => 'Delete Host',
+                                'title' => 'Delete User',
                                 'class' => 'deleteAcl'
                             ),
                         ),

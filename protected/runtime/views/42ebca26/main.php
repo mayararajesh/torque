@@ -18,6 +18,7 @@
     <link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl; ?>/css/fontawesome/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl; ?>/css/custom.css">
 	<title><?php echo CHtml::encode($this->pageTitle); ?></title>
+    <?php Yii::app()->clientScript->registerCoreScript('jquery'); ?>
 </head>
 
 <body>
@@ -50,12 +51,16 @@
 	<div class="clear"></div>
 
 	<div id="footer">
-		Copyright &copy; <?php echo date('Y'); ?> by My Company.<br/>
+		Copyright &copy; 2000 - <?php echo date('Y'); ?> by <a href="http://www.locuz.com/">Locuz</a> Enterprise Solutions ltd.<br/>
 		All Rights Reserved.<br/>
-		<?php echo Yii::powered(); ?>
 	</div><!-- footer -->
 
 </div><!-- page -->
 
+<script type="text/javascript">
+
+$('#content').css('min-height','406px');
+
+</script>
 </body>
 </html>

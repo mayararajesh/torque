@@ -16,7 +16,7 @@ return array(
     'name' => 'Ganana portal',
     'timeZone' => 'Asia/Calcutta',
     #preloading 'log' component
-    'preload' => array('fontawesome','log','jquery'),
+    'preload' => array('fontawesome', 'log', 'jquery'),
     #autoloading model and component classes
     'import' => array(
         'application.models.*',
@@ -35,6 +35,7 @@ return array(
         'user' => array(
             #enable cookie-based authentication
             'allowAutoLogin' => TRUE,
+            'autoUpdateFlash' => FALSE,
         ),
         // ...
         'viewRenderer' => array(
@@ -71,18 +72,18 @@ return array(
         'log' => array(
             'class' => 'CLogRouter',
             'routes' => array(
-                /*array(
-                    'class' => 'CFileLogRoute',
-                    'levels' => 'trace, info, error, warning',
-                ),
-                #uncomment the following to show log messages on web pages
-                array(
-                    'class' => 'CWebLogRoute',
-                    'enabled' => YII_DEBUG,
-                    'levels' => 'error, warning, trace, notice',
-                    'categories' => 'application',
-                    'showInFireBug' => TRUE,
-                ),*/
+            /* array(
+              'class' => 'CFileLogRoute',
+              'levels' => 'trace, info, error, warning',
+              ),
+              #uncomment the following to show log messages on web pages
+              array(
+              'class' => 'CWebLogRoute',
+              'enabled' => YII_DEBUG,
+              'levels' => 'error, warning, trace, notice',
+              'categories' => 'application',
+              'showInFireBug' => TRUE,
+              ), */
             ),
         ),
     ),
@@ -102,7 +103,12 @@ return array(
             'port' => 22
         ),
         'torque' => array(
-            'serverPriv' => '/var/spool/torque/server_priv'
+            'serverPriv' => '/var/spool/torque/server_priv',
+            'outputDir' => '/opt/results',
+            'qsubBin' =>'/opt/torque/4.2.9/bin',
+        ),
+        'mpi' => array(
+            'binPath' => '',
         ),
     ),
 );

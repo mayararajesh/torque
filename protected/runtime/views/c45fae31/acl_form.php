@@ -16,19 +16,7 @@
         // you need to use the performAjaxValidation()-method described there.
         'enableAjaxValidation' => false,
     ));
-    Yii::app()->clientScript->registerScript('search', "
-$('.search-button').click(function(){
-	$('.search-form').toggle();
-	return false;
-});
-$('.search-form form').submit(function(){
-	$('#queue-grid').yiiGridView('update', {
-		data: $(this).serialize()
-	});
-	return false;
-});
-");
-    ?>
+ ?>
 
     <p class="note">Fields with <span class="required">*</span> are required.</p>
 
@@ -48,59 +36,9 @@ $('.search-form form').submit(function(){
 
 
     <div class="row buttons">
-        <?php echo CHtml::submitButton('Add'); ?>
+        <?php echo CHtml::submitButton(!isset($action) ? 'Add' : 'Save'); ?>
     </div>
 
     <?php $this->endWidget(); ?>
 
 </div><!-- form -->
-<?php
-if (isset($data)) {
-    $this->widget('zii.widgets.grid.CGridView', array(
-        'id' => 'acl-queue-grid',
-        'dataProvider' => $data->search(),
-        'columns' => array(
-            'name',
-            array(
-                'class' => 'CButtonColumn',
-                'template' => '{Update} {Delete}',
-                'buttons' => array(
-                    'Update' => array(
-                        'label' => '<i class="font-icon fa fa-pencil-square"></i>',
-                        'imageUrl' => false,
-                        'url' => '"javascript:void(0);"', #'$this->grid->controller->createUrl("/queue/acl", array("id"=>$data->primaryKey,"asDialog"=>1,"gridId"=>$this->grid->id))',
-                        'options' => array(
-                            'title' => 'Edit Node',
-                            'class' => 'editAcl'
-                        ),
-                    ),
-                    'Delete' => array(
-                        'label' => '<i class="font-icon font-icon-status fa fa-times-circle"></i>',
-                        'imageUrl' => false,
-                        'url' => '"javascript:void(0);"', #'url' => '$this->grid->controller->createUrl("/node/delete", array("id"=>$data->primaryKey,"asDialog"=>1,"gridId"=>$this->grid->id))',
-                        'options' => array(
-                            'title' => 'Delete Node',
-                            'class' => 'deleteAcl'
-                        ),
-                    ),
-                ),
-            ),
-        ),
-    ));
-    ?>
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $("#acl-queue-grid").on('click', '.editAcl', function () {
-                var html = '<form action="<?php echo $this->createUrl('/queue/acl/' . $queue->id . '?type=' . $type . '&action=edit'); ?>" method="post">';
-                html += '<input name="acl_name" value="' + $(this).closest('tr').find('td:eq(0)').html() + '">&nbsp;';
-                html += '<input type="submit" value="Edit"/>';
-                html += '</form>';
-                $(this).closest('tr').find('td:eq(0)').html(html);
-            });
-        });
-    </script>
-    <?php
-} else {
-    echo "<h4>Not yet added</h4>";
-}
-?>

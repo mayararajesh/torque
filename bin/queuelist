@@ -1,0 +1,2 @@
+#!/bin/bash
+qstat -Q |awk -F" " 'NR>2 {print $1}'|sed -r ':a;N;$!ba;s/\n/,/g'

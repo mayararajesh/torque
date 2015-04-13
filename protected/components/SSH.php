@@ -18,7 +18,7 @@ class SSH extends CUserIdentity {
     private $lastLog;
     public $errorCode;
 
-    public function __construct($host,$port,$user) {
+    public function __construct($host, $port, $user) {
         $this->privateKey = Yii::app()->basePath . '/.ssh-key/id_rsa';
         $this->publicKey = Yii::app()->basePath . '/.ssh-key/id_rsa.pub';
         $this->host = $host;
@@ -193,6 +193,16 @@ class SSH extends CUserIdentity {
             return 'failed';
         }
         //return $this->lastLog;
+    }
+
+    public function writeStringToFile($targetFile, $content = "") {
+        $sftp = ssh2_sftp($this->conn);
+        $sftpStream = @fopen('ssh2.sftp://' . $sftp . $targetFile, 'w');
+        if (@fwrite($sftpStream, $content) === false) {
+            throw new CException(Yii::t('application', "Ssh could not write data from this editor"));
+        }
+        fclose($sftpStream);
+        return true;
     }
 
 }

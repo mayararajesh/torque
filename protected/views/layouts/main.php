@@ -50,9 +50,8 @@
 	<div class="clear"></div>
 
 	<div id="footer">
-		Copyright &copy; <?php echo date('Y'); ?> by My Company.<br/>
+		Copyright &copy; 2000 - <?php echo date('Y'); ?> by <a href="http://www.locuz.com/">Locuz</a> Enterprise Solutions ltd.<br/>
 		All Rights Reserved.<br/>
-		<?php echo Yii::powered(); ?>
 	</div><!-- footer -->
 
 </div><!-- page -->
