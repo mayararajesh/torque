@@ -37,11 +37,11 @@ class QueueController extends Controller {
     public function accessRules() {
         return array(
             array('allow', // allow all users to perform 'index' and 'view' actions
-                'actions' => array('index', 'view', 'getQueueList'),
+                'actions' => array( 'getQueueList'),
                 'users' => array('@'),
             ),
             array('allow', // allow authenticated user to perform 'create' and 'update' actions
-                'actions' => array('create', 'update', 'resource', 'acl'),
+                'actions' => array('index', 'view','create', 'update', 'resource', 'acl'),
                 'users' => array('root'),
             ),
             array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -744,7 +744,7 @@ class QueueController extends Controller {
                     $responseArray['response'] = $xmlQueueList;
                 } else {
                     $responseArray["status"] = COMMAND_ERROR;
-                    $responseArray["message"] = 'Error with command or its not working properly.';
+                    $responseArray["message"] = 'Error with command or command not working properly.';
                     $responseArray['response'] = $xmlQueueList;
                 }
                 unset($xmlQueueList);

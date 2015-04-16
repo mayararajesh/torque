@@ -25,7 +25,7 @@
 
     <div class="row">
         <?php echo $form->labelEx($model, 'name'); ?>
-        <?php echo $form->textField($model, 'name', $model->scenario == 'update' ? array('readonly'=>"readonly"):array()); ?>
+        <?php echo $form->textField($model, 'name', $model->scenario == 'update' ? array('readonly' => "readonly", 'autocomplete' => "off") : array('autocomplete' => "off")); ?>
     </div>
     <div class="row">
         <label for="QueuesForm_disallowed_types">Disallowed Types</label> 
@@ -36,11 +36,11 @@
         foreach ($disallowedType as $value) {
             if ($modelTemp->isNewRecord && !is_array($model['disallowed_types'])) {
                 ?>
-                <input type="checkbox" id="QueuesForm_disallowed_types" name="QueuesForm[disallowed_types][]" value="<?php echo $value; ?>"> <?php echo ucfirst($value); ?><br>
+                <input autocomplete="off" type="checkbox" id="QueuesForm_disallowed_types" name="QueuesForm[disallowed_types][]" value="<?php echo $value; ?>"> <?php echo ucfirst($value); ?><br>
                 <?php
             } else {
                 ?>
-                <input type="checkbox" id="QueuesForm_disallowed_types" name="QueuesForm[disallowed_types][]" value="<?php echo $value; ?>" <?php echo in_array($value, $model['disallowed_types']) ? ' checked="checked"' : ''; ?>> <?php echo ucfirst($value); ?><br>
+                <input autocomplete="off" type="checkbox" id="QueuesForm_disallowed_types" name="QueuesForm[disallowed_types][]" value="<?php echo $value; ?>" <?php echo in_array($value, $model['disallowed_types']) ? ' checked="checked"' : ''; ?>> <?php echo ucfirst($value); ?><br>
                 <?php
             }
         }

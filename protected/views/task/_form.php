@@ -18,23 +18,23 @@
 
     <div class="row">
         <?php echo $form->labelEx($model, 'name'); ?>
-        <?php echo $form->textField($model, 'name'); ?>
+        <?php echo $form->textField($model, 'name',array('autocomplete' => "off")); ?>
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'queue'); ?>
-        <?php echo CHtml::activeDropDownList($model, 'queue',array("" => '-- Select --')); ?>
+        <?php echo CHtml::activeDropDownList($model, 'queue',array("" => '-- Select --'),array('autocomplete' => "off")); ?>
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'nodes'); ?>
-        <?php echo $form->textField($model, 'nodes'); ?>
+        <?php echo $form->textField($model, 'nodes',array('autocomplete' => "off")); ?>
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'ppn'); ?>
-        <?php echo $form->textField($model, 'ppn'); ?>
+        <?php echo $form->textField($model, 'ppn',array('autocomplete' => "off")); ?>
     </div>
     <div class="row buttons">
         <?php echo CHtml::submitButton('Generate Script'); ?>
     </div>
     <?php $this->endWidget(); ?>
 </div><!-- form -->
-<script type="text/javascript" src="<?php echo Yii::app()->request->baseUrl; ?>/assets/js/tasks/taskManagerHome.js"></script>
+<script type="text/javascript" src="<?php echo Yii::app()->request->baseUrl; ?>/js/tasks/taskManagerHome.js"></script>

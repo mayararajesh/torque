@@ -1,7 +1,13 @@
-<link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl . '/assets/codemirror/lib/codemirror.css'; ?>">
-<link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl . '/assets/codemirror/theme/rubyblue.css'; ?>">
-<script src="<?php echo Yii::app()->request->baseUrl . '/assets/codemirror/lib/codemirror.js'; ?>"></script>
-<div class="row">
+<style>
+    .editor-area{
+        margin-left: 10px !important;
+        margin-right: 10px !important;
+    }
+</style>
+<link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl . '/js/codemirror/lib/codemirror.css'; ?>">
+<link rel="stylesheet" type="text/css" href="<?php echo Yii::app()->request->baseUrl . '/js/codemirror/theme/rubyblue.css'; ?>">
+<script src="<?php echo Yii::app()->request->baseUrl . '/js/codemirror/lib/codemirror.js'; ?>"></script>
+<div class="row editor-area">
     <textarea id="codemirror-shell-editor"><?php echo isset($content) ? $content : ''; ?></textarea>
     <div class="form"> 
         <?php
@@ -17,4 +23,4 @@
         <?php $this->endWidget(); ?>
     </div><!-- form -->
 </div>
-<script type="text/javascript" src="<?php echo Yii::app()->request->baseUrl; ?>/assets/js/tasks/editor.js"></script>
+<script type="text/javascript" src="<?php echo Yii::app()->request->baseUrl; ?>/js/tasks/editor.js"></script>

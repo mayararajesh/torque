@@ -14,12 +14,13 @@
 return array(
     'basePath' => dirname(__FILE__) . DIRECTORY_SEPARATOR . '..',
     'name' => 'Ganana portal',
+    'theme' => 'abound',
     'timeZone' => 'Asia/Calcutta',
     #preloading 'log' component
     'preload' => array('fontawesome', 'log', 'jquery'),
     #autoloading model and component classes
     'import' => array(
-        'application.config.*',
+        #'application.config.*',
         'application.models.*',
         'application.components.*',
     ),
@@ -39,9 +40,9 @@ return array(
             'autoUpdateFlash' => FALSE,
         ),
         // ...
-        'viewRenderer' => array(
-            'class' => 'CPradoViewRenderer',
-        ),
+//        'viewRenderer' => array(
+//            'class' => 'CPradoViewRenderer',
+//        ),
         'fontawesome' => array(
             'class' => 'ext.fontawesome.components.FontAwesome',
         ),
