@@ -19,6 +19,7 @@ return array(
     'preload' => array('fontawesome', 'log', 'jquery'),
     #autoloading model and component classes
     'import' => array(
+        'application.config.*',
         'application.models.*',
         'application.components.*',
     ),
@@ -108,7 +109,10 @@ return array(
             'qsubBin' =>'/opt/torque/4.2.9/bin',
         ),
         'mpi' => array(
-            'binPath' => '',
+            'binPath' => '/opt/apps/open-mpi/1.8.4/bin',
+        ),
+        'organisation' =>array(
+            'name' => 'Locuz Enterprise Solutions Limited',
         ),
     ),
 );

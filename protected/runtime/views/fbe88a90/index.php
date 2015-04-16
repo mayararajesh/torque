@@ -1,20 +1,24 @@
 <?php /* source file: /var/www/html/torque/protected/views/task/index.php */ ?>
-<?php
+<link rel="stylesheet" href="<?php echo Yii::app()->request->baseUrl; ?>/css/tasks/tasks.css" />
+<div class="task-area">
+    <?php
+    /* @var $this TaskController */
 
-/* @var $this TaskController */
+    $this->breadcrumbs = array(
+        'task',
+    );
+    ?>
 
-$this->breadcrumbs = array(
-    'task',
-);
-?>
-<?php
-
-if ($show == "editor") {
-    $this->renderPartial('editor', array('content' => $content));
-} else {
-    $params['model'] = $model;
-    if(isset($queues)){
-        $params['queues'] = $queues;
+    <?php
+    if ($show == "editor") {
+        $this->renderPartial('editor', array('content' => $content));
+    } else {
+        $params['model'] = $model;
+        if (isset($queues)) {
+            $params['queues'] = $queues;
+        }
+        $this->renderPartial('_form', $params);
     }
-    $this->renderPartial('_form', $params);
-}?>
+    ?>
+
+</div>

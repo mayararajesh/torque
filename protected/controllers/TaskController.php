@@ -14,9 +14,19 @@ class TaskController extends Controller {
      * @var string the default layout for the views. Defaults to '//layouts/column2', meaning
      * using two-column layout. See 'protected/views/layouts/column2.php'.
      */
-    public $layout = '//layouts/column2';
+    public $layout = '//layouts/main';
 
-//--------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
+    /**
+     * @return array action filters
+     */
+    public function filters() {
+        return array(
+            'accessControl', // perform access control for CRUD operations
+        );
+    }
+
+    //--------------------------------------------------------------------------
     /**
      * Specifies the access control rules.
      * This method is used by the 'accessControl' filter.
@@ -24,17 +34,9 @@ class TaskController extends Controller {
      */
     public function accessRules() {
         return array(
-            array('allow', // allow all users to perform 'index' and 'view' actions
-                'actions' => array('index', 'view', 'edit', 'submit'),
-                'users' => array('*'),
-            ),
-            array('allow', // allow authenticated user to perform 'create' and 'update' actions
-                'actions' => array('create', 'update', 'resource', 'acl'),
-                'users' => array('*'),
-            ),
-            array('allow', // allow admin user to perform 'admin' and 'delete' actions
-                'actions' => array('admin', 'delete'),
-                'users' => array('*'),
+            array('allow', // allow authenticated users to perform 'index' and 'submit' actions
+                'actions' => array('index', 'submit'),
+                'users' => array('@'),
             ),
             array('deny', // deny all users
                 'users' => array('*'),
@@ -45,40 +47,12 @@ class TaskController extends Controller {
     public function actionIndex() {
         $model = new TaskForm();
         $params = array('model' => $model);
-        $host = Yii::app()->params->hostDetails['host'];
-        $port = Yii::app()->params->hostDetails['port'];
-        $sshHost = new SSH($host, $port, 'compute1');
-        if ($sshHost->isConnected() && $sshHost->authenticate_pass('redhat')) {
-            $cmd = 'qstat -Q |awk -F" " \'NR>2 {print $1}\'|sed -r \':a;N;$!ba;s/\n/,/g\'';
-            $xmlQueueList = $sshHost->cmd($cmd);
-            if ($xmlQueueList !== "") {
-                $xmlQueueList = split(',', $xmlQueueList);
-                $params['queues'] = $xmlQueueList;
-            }
-            unset($xmlQueueList);
-        } else {
-            echo "Authentication Error";
-        }
-        $sshHost->disconnect();
         $params['show'] = 'form';
         if (isset($_POST['TaskForm'])) {
             $attributes = $_POST['TaskForm'];
             $model->attributes = $attributes;
-            $outPutDir = Yii::app()->params['torque']['outputDir'];
             if ($model->validate()) {
-                $script = "#!/bin/sh" . "\n" .
-                        "#PBS -N {$attributes['name']}" . "\n" .
-                        "#PBS -S /bin/bash" . "\n" .
-                        "#PBS -e $outPutDir/\$PBS_JOBID.\$PBS_JOBNAME.err" . "\n" .
-                        "#PBS -o $outPutDir/\$PBS_JOBID.\$PBS_JOBNAME.out" . "\n" .
-                        "#PBS -q {$attributes['queue']}" . "\n" .
-                        "#PBS -l nodes={$attributes['nodes']}:ppn={$attributes['ppn']}" . "\n" .
-                        "cd \$PBS_O_WORKDIR" . "\n" .
-                        "cd /home/locuz/gromacs/rnase_cubic/" . "\n" .
-                        "date" . "\n" .
-                        Yii::app()->params['mpi']['binPath'] . "/mpirun -np \$NSLOTS -hostfile \$TMPDIR/machines mdrun_mpi -s rnase_cubic.tpr" . "\n" .
-                        "date";
-                $outPutDir = Yii::app()->params['torque']['outputDir'];
+                $script = $this->generateScript($attributes);
                 $params['content'] = $script;
                 $params['show'] = 'editor';
             }
@@ -100,17 +74,58 @@ class TaskController extends Controller {
             $commandArray = array();
             $host = Yii::app()->params->hostDetails['host'];
             $port = Yii::app()->params->hostDetails['port'];
-            $sshHost = new SSH($host, $port, 'compute1');
-            if ($sshHost->isConnected() && $sshHost->authenticate_pass('redhat')) {
+            $user = Yii::app()->user->name;
+            $encryptedPassword = Yii::app()->user->password;
+            $aes = new AES($encryptedPassword);
+            $sshHost = new SSH($host, $port, $user);
+            if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
                 if ($sshHost->writeStringToFile($filePath, $content)) {
                     $sshHost->cmd("chmod 0744 {$filePath}");
-                    echo $sshHost->cmd(Yii::app()->params['torque']['qsubBin'] . "/qsub {$filePath}") . "<br />";
+                    echo $sshHost->cmd(Yii::app()->params['torque']['qsubBin'] .
+                            "/qsub {$filePath}") . "<br />";
                 }
             } else {
                 echo "Authentication Error";
             }
             $sshHost->disconnect();
         }
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Returns the required script to submit the job
+     * 
+     * @param Array $attributes
+     * @return string
+     * @since  2.0
+     */
+    private function generateScript($attributes) {
+        $outPutDir = Yii::app()->params['torque']['outputDir'];
+        $script = "#!/bin/sh" . "\n" .
+                "#PBS -N {$attributes['name']}" . "\n" .
+                "#PBS -S /bin/bash" . "\n" .
+                "#PBS -e $outPutDir/\$PBS_JOBID.\$PBS_JOBNAME.err" . "\n" .
+                "#PBS -o $outPutDir/\$PBS_JOBID.\$PBS_JOBNAME.out" . "\n" .
+                "#PBS -q {$attributes['queue']}" . "\n" .
+                "#PBS -l nodes={$attributes['nodes']}:ppn={$attributes['ppn']}" . "\n" .
+                "cd \$PBS_O_WORKDIR" . "\n" .
+                "echo \"job started at `date`\"" . "\n" .
+                Yii::app()->params['mpi']['binPath'] . "/mpirun -np \$NSLOTS -hostfile \$TMPDIR/machines mdrun_mpi -s rnase_cubic.tpr" . "\n" .
+                "echo \"job completed at `date`\"";
+        /*
+          $script = "#PBS -N myjob" . "\n" .
+          "#PBS -q batch" . "\n" .
+          "#PBS -S /bin/sh" . "\n" .
+          "cd \$PBS_O_WORKDIR" . "\n" .
+          "echo \"Working directory is \$PBS_O_WORKDIR\"" . "\n" .
+          "NPROCS=`wc -l < \$PBS_NODEFILE`" . "\n" .
+          "NNODES=`uniq \$PBS_NODEFILE | wc -l`" . "\n" .
+          "echo \"Running on host `hostname`\"" . "\n" .
+          "echo \"Time is `date`\"" . "\n" .
+          "echo \"Directory is `pwd`\"" . "\n" .
+          "echo \"Using \${NPROCS} processors across \${NNODES} nodes\"";
+         */
+        return $script;
     }
 
 }

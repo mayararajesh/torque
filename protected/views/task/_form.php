@@ -22,15 +22,7 @@
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'queue'); ?>
-        <?php 
-            $data = array("" => "-- Select --");
-            if(isset($queues)){
-                foreach ($queues  as $q){
-                    $data[$q] = $q;
-                } 
-            }
-        ?>
-        <?php echo CHtml::activeDropDownList($model, 'queue',$data); ?>
+        <?php echo CHtml::activeDropDownList($model, 'queue',array("" => '-- Select --')); ?>
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'nodes'); ?>
@@ -40,8 +32,9 @@
         <?php echo $form->labelEx($model, 'ppn'); ?>
         <?php echo $form->textField($model, 'ppn'); ?>
     </div>
-    <div style="textalign: center !important;" class="row buttons">
+    <div class="row buttons">
         <?php echo CHtml::submitButton('Generate Script'); ?>
     </div>
     <?php $this->endWidget(); ?>
 </div><!-- form -->
+<script type="text/javascript" src="<?php echo Yii::app()->request->baseUrl; ?>/assets/js/tasks/taskManagerHome.js"></script>

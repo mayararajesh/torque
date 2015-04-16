@@ -22,10 +22,10 @@ class LoginForm extends CFormModel {
         return array(
             // username and password are required
             array('username, password', 'required'),
-            // rememberMe needs to be a boolean
-            array('rememberMe', 'boolean'),
-            // password needs to be authenticated
-            array('password', 'authenticate'),
+                // rememberMe needs to be a boolean
+                #array('rememberMe', 'boolean'),
+                // password needs to be authenticated
+                #array('password', 'authenticate'),
         );
     }
 
@@ -43,11 +43,11 @@ class LoginForm extends CFormModel {
      * This is the 'authenticate' validator as declared in rules().
      */
     public function authenticate($attribute, $params) {
-        /*if (!$this->hasErrors()) {
+        if (!$this->hasErrors()) {
             $this->_identity = new UserIdentity($this->username, $this->password);
             if (!$this->_identity->authenticate())
                 $this->addError('password', 'Incorrect username or password.');
-        }*/
+        } /**/
     }
 
     /**
@@ -55,21 +55,33 @@ class LoginForm extends CFormModel {
      * @return boolean whether login is successful
      */
     public function login() {
-        if ($this->_identity === null) {
-            $this->_identity = new SSH('localhost', 22, $this->username);
-            if ($this->_identity->isConnected() && $this->_identity->authenticate_pass($this->password)) {
-                #$duration = $this->rememberMe ? 3600 * 24 * 30 : 0; // 30 days
-                Yii::app()->user->setState('username',$this->username);
-                Yii::app()->user->setState('password',$this->password);
-            } else {
-                $this->addError('password', 'Incorrect username or password.');
-            }
+        /* $host = Yii::app()->params['hostDetails']['host'];
+          $port = Yii::app()->params['hostDetails']['port'];
+          $sshHost = new SSH($host, $port, $this->username);
+          if (!Yii::app()->user->getState('name')) {
+          if ($sshHost->isConnected() && $sshHost->authenticate_pass($this->password)) {
+          $aes = new AES($this->password);
+          $encryptedPassword = $aes->encrypt();
+          Yii::app()->user->setState('name', $this->username);
+          Yii::app()->user->setState('password', $encryptedPassword);
+          Yii::app()->user->setState('role', 'admin');
+          Yii::app()->authManager->save();
+          $this->errorCode = CUserIdentity::ERROR_NONE;
+          $sshHost->disconnect();
+          } else {
+          $this->addError('password', 'Incorrect username or password.');
+          }
+          } */
+        if ($this->_identity === NULL) {
+            $this->_identity = new UserIdentity($this->username, $this->password);
+            $this->_identity->authenticate();
         }
-        if(!$this->hasErrors()){
+        if ($this->_identity->errorCode === UserIdentity::ERROR_NONE) {
+            Yii::app()->user->login($this->_identity, 1800);
             return TRUE;
-        }else{
-            return FALSE;
         }
+
+        return FALSE;
     }
 
     /**

@@ -35,14 +35,14 @@ class NodeController extends Controller {
         return array(
             array('allow', // allow all users to perform 'index' and 'view' actions
                 'actions' => array('index', 'view'),
-                'users' => array('*'),
+                'users' => array('@'),
             ),
             array('allow', // allow authenticated user to perform 'create' and 'update' actions
                 'actions' => array('create', 'update', 'online', 'offline'),
-                'users' => array('*'),
+                'users' => array('root'),
             ),
             array('allow', // allow admin user to perform 'admin' and 'delete' actions
-                'actions' => array('admin', 'delete'),
+                'actions' => array('root', 'delete'),
                 'users' => array('*'),
             ),
             array('deny', // deny all users
@@ -75,8 +75,11 @@ class NodeController extends Controller {
             $model->attributes = $_POST['Node'];
             $host = Yii::app()->params->hostDetails['host'];
             $port = Yii::app()->params->hostDetails['port'];
-            $sshHost = new SSH($host, $port, 'root');
-            if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+            $user = Yii::app()->user->name;
+            $encryptedPassword = Yii::app()->user->password;
+            $aes = new AES($encryptedPassword);
+            $sshHost = new SSH($host, $port, $user);
+            if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
                 $error = array();
                 $cmd = 'qmgr -c "create node ' . $model->attributes['name'] . '"';
                 $cmd = $sshHost->cmd($cmd);
@@ -120,8 +123,11 @@ class NodeController extends Controller {
             $model->attributes = $_POST['Node'];
             $host = Yii::app()->params->hostDetails['host'];
             $port = Yii::app()->params->hostDetails['port'];
-            $sshHost = new SSH($host, $port, 'root');
-            if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+            $user = Yii::app()->user->name;
+            $encryptedPassword = Yii::app()->user->password;
+            $aes = new AES($encryptedPassword);
+            $sshHost = new SSH($host, $port, $user);
+            if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
                 $this->setNodeProps($sshHost, $model);
                 if ($model->save()) {
                     $this->redirect(array('view', 'id' => $model->id));
@@ -143,8 +149,11 @@ class NodeController extends Controller {
         $node = $this->loadModel($id);
         $host = Yii::app()->params->hostDetails['host'];
         $port = Yii::app()->params->hostDetails['port'];
-        $sshHost = new SSH($host, $port, 'root');
-        if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+        $user = Yii::app()->user->name;
+        $encryptedPassword = Yii::app()->user->password;
+        $aes = new AES($encryptedPassword);
+        $sshHost = new SSH($host, $port, $user);
+        if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
             $sshHost->cmd('qmgr -c "delete node ' . $node->name . '"');
             $sshHost->disconnect();
             $this->loadModel($id)->delete();
@@ -302,8 +311,11 @@ class NodeController extends Controller {
         $node = $this->loadModel($id);
         $host = Yii::app()->params->hostDetails['host'];
         $port = Yii::app()->params->hostDetails['port'];
-        $sshHost = new SSH($host, $port, 'root');
-        if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123') && $node) {
+        $user = Yii::app()->user->name;
+        $encryptedPassword = Yii::app()->user->password;
+        $aes = new AES($encryptedPassword);
+        $sshHost = new SSH($host, $port, $user);
+        if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
             $sshHost->cmd('pbsnodes -c ' . $node->name . '');
             $sshHost->disconnect();
         }
@@ -320,8 +332,11 @@ class NodeController extends Controller {
         $node = $this->loadModel($id);
         $host = Yii::app()->params->hostDetails['host'];
         $port = Yii::app()->params->hostDetails['port'];
-        $sshHost = new SSH($host, $port, 'root');
-        if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123') && $node) {
+        $user = Yii::app()->user->name;
+        $encryptedPassword = Yii::app()->user->password;
+        $aes = new AES($encryptedPassword);
+        $sshHost = new SSH($host, $port, $user);
+        if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
             $sshHost->cmd('pbsnodes -o ' . $node->name . '');
             $sshHost->disconnect();
         }

@@ -37,16 +37,16 @@ class QueueController extends Controller {
     public function accessRules() {
         return array(
             array('allow', // allow all users to perform 'index' and 'view' actions
-                'actions' => array('index', 'view'),
-                'users' => array('*'),
+                'actions' => array('index', 'view', 'getQueueList'),
+                'users' => array('@'),
             ),
             array('allow', // allow authenticated user to perform 'create' and 'update' actions
                 'actions' => array('create', 'update', 'resource', 'acl'),
-                'users' => array('*'),
+                'users' => array('root'),
             ),
             array('allow', // allow admin user to perform 'admin' and 'delete' actions
                 'actions' => array('admin', 'delete'),
-                'users' => array('*'),
+                'users' => array('root'),
             ),
             array('deny', // deny all users
                 'users' => array('*'),
@@ -170,8 +170,11 @@ class QueueController extends Controller {
                 array_push($commandArray, $cmd);
                 $host = Yii::app()->params->hostDetails['host'];
                 $port = Yii::app()->params->hostDetails['port'];
-                $sshHost = new SSH($host, $port, 'root');
-                if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+                $user = Yii::app()->user->name;
+                $encryptedPassword = Yii::app()->user->password;
+                $aes = new AES($encryptedPassword);
+                $sshHost = new SSH($host, $port, $user);
+                if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
                     foreach ($commandArray as $cmd) {
                         echo $sshHost->cmd($cmd);
                     }
@@ -280,8 +283,11 @@ class QueueController extends Controller {
                 }
                 $host = Yii::app()->params->hostDetails['host'];
                 $port = Yii::app()->params->hostDetails['port'];
-                $sshHost = new SSH($host, $port, 'root');
-                if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+                $user = Yii::app()->user->name;
+                $encryptedPassword = Yii::app()->user->password;
+                $aes = new AES($encryptedPassword);
+                $sshHost = new SSH($host, $port, $user);
+                if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
                     foreach ($commandArray as $cmd) {
                         echo $sshHost->cmd($cmd) . "<br />";
                     }
@@ -314,8 +320,11 @@ class QueueController extends Controller {
         $model = $this->loadModel($id);
         $host = Yii::app()->params->hostDetails['host'];
         $port = Yii::app()->params->hostDetails['port'];
-        $sshHost = new SSH($host, $port, 'root');
-        if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+        $user = Yii::app()->user->name;
+        $encryptedPassword = Yii::app()->user->password;
+        $aes = new AES($encryptedPassword);
+        $sshHost = new SSH($host, $port, $user);
+        if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
             $response = $sshHost->cmd('qmgr -c "delete queue ' . $model->name . '"');
             $tag = 'success';
             $message = "Queue '" . $model->name . "' successfully deleted.";
@@ -505,8 +514,11 @@ class QueueController extends Controller {
                     if ($isNewData ? $model->save(FALSE) : $model->updateByPk($tempId, $temp)) {
                         $host = Yii::app()->params->hostDetails['host'];
                         $port = Yii::app()->params->hostDetails['port'];
-                        $sshHost = new SSH($host, $port, 'root');
-                        if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+                        $user = Yii::app()->user->name;
+                        $encryptedPassword = Yii::app()->user->password;
+                        $aes = new AES($encryptedPassword);
+                        $sshHost = new SSH($host, $port, $user);
+                        if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
                             foreach ($commandArray as $cmd) {
                                 Yii::app()->user->setFlash('notice', $sshHost->cmd($cmd));
                             }
@@ -621,8 +633,11 @@ class QueueController extends Controller {
                 array_push($commandArray, $cmd);
                 $host = Yii::app()->params->hostDetails['host'];
                 $port = Yii::app()->params->hostDetails['port'];
-                $sshHost = new SSH($host, $port, 'root');
-                if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+                $user = Yii::app()->user->name;
+                $encryptedPassword = Yii::app()->user->password;
+                $aes = new AES($encryptedPassword);
+                $sshHost = new SSH($host, $port, $user);
+                if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
                     foreach ($commandArray as $cmd) {
                         Yii::app()->user->setFlash('notice', $sshHost->cmd($cmd));
                     }
@@ -675,8 +690,11 @@ class QueueController extends Controller {
             array_push($commandArray, $cmd);
             $host = Yii::app()->params->hostDetails['host'];
             $port = Yii::app()->params->hostDetails['port'];
-            $sshHost = new SSH($host, $port, 'root');
-            if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+            $user = Yii::app()->user->name;
+            $encryptedPassword = Yii::app()->user->password;
+            $aes = new AES($encryptedPassword);
+            $sshHost = new SSH($host, $port, $user);
+            if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
                 foreach ($commandArray as $cmd) {
                     Yii::app()->user->setFlash('notice', $sshHost->cmd($cmd));
                 }
@@ -696,6 +714,47 @@ class QueueController extends Controller {
             'data' => $modelForm,
             'action' => $action,
         ));
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * returns queue list which associated with torque via ajax
+     * 
+     * @since   2.0
+     */
+    public function actionGetQueueList() {
+        $responseArray["status"] = INVALID_REQUEST;
+        $responseArray["message"] = 'Invalid Request';
+        if (isset($_POST)) {
+            $host = Yii::app()->params->hostDetails['host'];
+            $port = Yii::app()->params->hostDetails['port'];
+            $user = Yii::app()->user->name;
+            $encryptedPassword = Yii::app()->user->password;
+            $aes = new AES($encryptedPassword);
+            $sshHost = new SSH($host, $port, $user);
+            if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
+                $cmd = 'qstat -Q |awk -F" " \'NR>2 {print $1}\'|sed -r \':a;N;$!ba;s/\n/,/g\'';
+                $xmlQueueList = $sshHost->cmd($cmd);
+                if ($xmlQueueList !== "") {
+                    $xmlQueueList = str_replace("\r\n", "", $xmlQueueList);
+                    $xmlQueueList = split(',', $xmlQueueList);
+                    sort($xmlQueueList, SORT_STRING);
+                    $responseArray["status"] = SUCCESS;
+                    $responseArray["message"] = 'Successfully retrieved queue list.';
+                    $responseArray['response'] = $xmlQueueList;
+                } else {
+                    $responseArray["status"] = COMMAND_ERROR;
+                    $responseArray["message"] = 'Error with command or its not working properly.';
+                    $responseArray['response'] = $xmlQueueList;
+                }
+                unset($xmlQueueList);
+            } else {
+                $responseArray["status"] = AUTHENTICATION_ERROR;
+                $responseArray["message"] = 'Authentication Error';
+            }
+            $sshHost->disconnect();
+        }
+        echo json_encode($responseArray);
     }
 
 }

@@ -82,7 +82,7 @@ class SiteController extends Controller {
             $model->attributes = $_POST['LoginForm'];
             // validate user input and redirect to the previous page if valid
             if ($model->validate() && $model->login()) {
-                $this->redirect('http://10.129.154.83/torque/index.php/site/index');
+                $this->redirect(Yii::app()->request->baseUrl.'/index.php/task');
             }
         }
         // display the login form
@@ -94,6 +94,7 @@ class SiteController extends Controller {
      */
     public function actionLogout() {
         Yii::app()->user->logout();
+        #Yii::app()->user->isGuest = TRUE;
         $this->redirect(Yii::app()->homeUrl);
     }
 
