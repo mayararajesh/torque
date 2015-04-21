@@ -79,15 +79,24 @@ class TaskController extends Controller {
             $aes = new AES($encryptedPassword);
             $sshHost = new SSH($host, $port, $user);
             if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
+                unset($aes);
                 if ($sshHost->writeStringToFile($filePath, $content)) {
                     $sshHost->cmd("chmod 0744 {$filePath}");
-                    echo $sshHost->cmd(Yii::app()->params['torque']['qsubBin'] .
-                            "/qsub {$filePath}") . "<br />";
+                    $message = $sshHost->cmd(Yii::app()->params['torque']['qsubBin'] . "/qsub {$filePath}");
+                    $messages = split('.', $message);
+                    if (count($messages) == 2) {
+                        Yii::app()->user->setFlash('success', $message . " Job suceessfully submitted.");
+                    } else {
+                        Yii::app()->user->setFlash('error', $message);
+                    }
+                    $sshHost->disconnect();
                 }
             } else {
-                echo "Authentication Error";
+                unset($aes);
+                Yii::app()->user->setFlash('info', "Problem with authentication.Unable to submit the Job.");
             }
-            $sshHost->disconnect();
+            unset($sshHost);
+            $this->redirect(Yii::app()->createUrl('task/index'));
         }
     }
 
@@ -112,19 +121,6 @@ class TaskController extends Controller {
                 "echo \"job started at `date`\"" . "\n" .
                 Yii::app()->params['mpi']['binPath'] . "/mpirun -np \$NSLOTS -hostfile \$TMPDIR/machines mdrun_mpi -s rnase_cubic.tpr" . "\n" .
                 "echo \"job completed at `date`\"";
-        /*
-          $script = "#PBS -N myjob" . "\n" .
-          "#PBS -q batch" . "\n" .
-          "#PBS -S /bin/sh" . "\n" .
-          "cd \$PBS_O_WORKDIR" . "\n" .
-          "echo \"Working directory is \$PBS_O_WORKDIR\"" . "\n" .
-          "NPROCS=`wc -l < \$PBS_NODEFILE`" . "\n" .
-          "NNODES=`uniq \$PBS_NODEFILE | wc -l`" . "\n" .
-          "echo \"Running on host `hostname`\"" . "\n" .
-          "echo \"Time is `date`\"" . "\n" .
-          "echo \"Directory is `pwd`\"" . "\n" .
-          "echo \"Using \${NPROCS} processors across \${NNODES} nodes\"";
-         */
         return $script;
     }
 

@@ -13,11 +13,12 @@ class TaskForm extends CFormModel {
     public $queue;
     public $nodes;
     public $ppn;
+    public $share;
 
     public function rules() {
         return array(
             array('name,queue,nodes,ppn', 'required'),
-            array('name,queue', 'length','max'=>127),
+            array('name,queue', 'length', 'max' => 127),
             array('nodes,ppn', 'numerical', 'integerOnly' => TRUE),
         );
     }
@@ -31,6 +32,7 @@ class TaskForm extends CFormModel {
             'queue' => 'Queue',
             'nodes' => 'Nodes',
             'ppn' => 'Processors',
+            'share' => 'Share',
         );
     }
 

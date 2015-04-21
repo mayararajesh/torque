@@ -18,19 +18,39 @@
 
     <div class="row">
         <?php echo $form->labelEx($model, 'name'); ?>
-        <?php echo $form->textField($model, 'name',array('autocomplete' => "off")); ?>
+        <?php echo $form->textField($model, 'name', array('autocomplete' => "off")); ?>
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'queue'); ?>
-        <?php echo CHtml::activeDropDownList($model, 'queue',array("" => '-- Select --'),array('autocomplete' => "off")); ?>
+        <?php echo CHtml::activeDropDownList($model, 'queue', array("" => '-- Select --'), array('autocomplete' => "off")); ?>
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'nodes'); ?>
-        <?php echo $form->textField($model, 'nodes',array('autocomplete' => "off")); ?>
+        <?php echo $form->textField($model, 'nodes', array('autocomplete' => "off")); ?>
     </div>
     <div class="row">
         <?php echo $form->labelEx($model, 'ppn'); ?>
-        <?php echo $form->textField($model, 'ppn',array('autocomplete' => "off")); ?>
+        <?php echo $form->textField($model, 'ppn', array('autocomplete' => "off")); ?>
+    </div>
+    <div class="row">
+        <?php echo $form->labelEx($model,'share'); ?>
+		<?php echo $form->textField($model,'share',array('size'=>40,'maxlength'=>256)); ?>
+        <?php
+        $this->widget('zii.widgets.jui.CJuiButton', array(
+            'buttonType' => 'button',
+            'name' => 'browse',
+            'caption' => 'Open directory browser',
+            'options' => array('text' => false, 'icons' => 'js:{primary:"ui-icon-folder-open"}'),
+            //'themeUrl' => Yii::app()->baseUrl . '/css/jq',
+            //'theme'=>'custom-theme',
+            'onclick' => 'js:function(){jQuery("#filedirdialog").dialog("open");}',
+        ));
+        ?>
+        <?php
+        $returnid = CHtml::getIdByName(get_class($model) . '[share]');
+        $this->renderPartial('/widgets/_filedirpicker', array('title' => 'Select directory', 'path' => '/',
+            'inputtype' => 'text', 'readonly' => true, 'dironly' => true, 'remote' => true, 'returnid' => $returnid));
+        ?>
     </div>
     <div class="row buttons">
         <?php echo CHtml::submitButton('Generate Script'); ?>

@@ -7,7 +7,18 @@
         'task',
     );
     ?>
-
+    <div class="messages">
+        <?php
+        foreach (Yii::app()->user->getFlashes() as $key => $message) {
+            ?>
+            <div class="alert alert-<?php echo $key;?>">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <strong> <?php echo $message;?></strong>
+            </div>
+            <?php
+        }
+        ?>
+    </div>
     <?php
     if ($show == "editor") {
         $this->renderPartial('editor', array('content' => $content));

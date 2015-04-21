@@ -6,7 +6,7 @@
             var BASE_URL = "<?php echo Yii::app()->request->baseUrl; ?>";
         </script>
         <meta charset="utf-8">
-        <title></title>
+        <title><?php echo CHtml::encode($this->pageTitle); ?></title>
 
         <!--	<link href='http://fonts.googleapis.com/css?family=Carrois+Gothic' rel='stylesheet' type='text/css'>-->
 

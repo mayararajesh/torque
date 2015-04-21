@@ -255,7 +255,6 @@ class NodeController extends Controller {
             $commandSyntax = split(':', $command);
             if ($commandSyntax[0] !== "pbsnodes") {
                 $xmlstring = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" . $command;
-                #echo '<pre>'.$xmlstring."</pre>";exit;
                 $xml = simplexml_load_string($xmlstring);
                 $json = json_encode($xml);
                 $nodeDetails = json_decode($json, TRUE);
