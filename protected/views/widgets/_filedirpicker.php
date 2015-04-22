@@ -5,9 +5,9 @@ $this->beginWidget('zii.widgets.jui.CJuiDialog', array(
         'title' => $title,
         'autoOpen' => false,
         'modal' => true,
-        'minWidth' => 400,
+        'minWidth' => 500,
         #'width'=>250,
-        'minHeight' => 300,
+        'minHeight' => 400,
         #'height'=>250,
         'buttons' => array(
             'Select' => array(
@@ -29,9 +29,9 @@ $this->beginWidget('zii.widgets.jui.CJuiDialog', array(
         #'theme'=>'custom-theme',
 ));
 ?>
-<div id="headfixed" class="row" style="position:absolute;top:0;height:37px;left:0; right:0;overflow:hidden;padding-right:8px">
+<div id="headfixed" class="row" style="height:37px;top:0;left:0;overflow:hidden;margin-left:-20px;margin-right:2px">
     <div class="ui-dialog-content">
-        <input id="filedirpath" style="width:100%;" type="<?php echo $inputtype; ?>" <?php echo $readonly ? 'readonly' : ''; ?> value="<?php echo $path; ?>">
+        <input id="filedirpath" style="width:98%;" type="<?php echo $inputtype; ?>" <?php echo $readonly ? 'readonly' : ''; ?> value="<?php echo $path; ?>">
     </div>
 </div>
 <div style="position: absolute;bottom:0;left:0;right:0;top:37px;overflow:auto;">

@@ -13,7 +13,7 @@ class TaskForm extends CFormModel {
     public $queue;
     public $nodes;
     public $ppn;
-    public $share;
+    public $inputFile;
 
     public function rules() {
         return array(
@@ -32,7 +32,7 @@ class TaskForm extends CFormModel {
             'queue' => 'Queue',
             'nodes' => 'Nodes',
             'ppn' => 'Processors',
-            'share' => 'Share',
+            'inputFile' => 'Input File(s)',
         );
     }
 
