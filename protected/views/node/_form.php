@@ -16,13 +16,22 @@
         'enableAjaxValidation' => false,
     ));
     ?>
-
+    <?php
+    foreach (Yii::app()->user->getFlashes() as $key => $message) {
+        ?>
+        <div class="alert alert-<?php echo $key; ?>">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <strong> <?php echo $message; ?></strong>
+        </div>
+        <?php
+    }
+    ?>
     <p class="note">Fields with <span class="required">*</span> are required.</p>
 
     <?php echo $form->errorSummary($model); ?>
 
     <div class="row">
-        <?php echo $form->labelEx($model,'name'); ?>
+        <?php echo $form->labelEx($model, 'name'); ?>
         <?php
         if ($model->isNewRecord) {
             echo $form->textField($model, 'name', array('maxlength' => 255));
@@ -30,31 +39,31 @@
             echo $form->textField($model, 'name', array('readonly' => 'readonly', 'maxlength' => 255));
         }
         ?>
-        <?php echo $form->error($model,'name'); ?>
+        <?php echo $form->error($model, 'name'); ?>
     </div>
 
     <div class="row">
-        <?php echo $form->labelEx($model,'np'); ?>
-        <?php echo $form->textField($model,'np'); ?>
-        <?php echo $form->error($model,'np'); ?>
+        <?php echo $form->labelEx($model, 'np'); ?>
+        <?php echo $form->textField($model, 'np'); ?>
+        <?php echo $form->error($model, 'np'); ?>
     </div>
 
     <div class="row">
-        <?php echo $form->labelEx($model,'gpus'); ?>
-        <?php echo $form->textField($model,'gpus'); ?>
-        <?php echo $form->error($model,'gpus'); ?>
+        <?php echo $form->labelEx($model, 'gpus'); ?>
+        <?php echo $form->textField($model, 'gpus'); ?>
+        <?php echo $form->error($model, 'gpus'); ?>
     </div>
 
     <div class="row">
-        <?php echo $form->labelEx($model,'mics'); ?>
-        <?php echo $form->textField($model,'mics'); ?>
-        <?php echo $form->error($model,'mics'); ?>
+        <?php echo $form->labelEx($model, 'mics'); ?>
+        <?php echo $form->textField($model, 'mics'); ?>
+        <?php echo $form->error($model, 'mics'); ?>
     </div>
 
     <div class="row buttons">
         <?php echo CHtml::submitButton($model->isNewRecord ? 'Create' : 'Save'); ?>
     </div>
 
-<?php $this->endWidget(); ?>
+    <?php $this->endWidget(); ?>
 
 </div><!-- form -->

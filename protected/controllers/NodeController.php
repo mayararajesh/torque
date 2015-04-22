@@ -93,10 +93,12 @@ class NodeController extends Controller {
                 }
                 $sshHost->disconnect();
                 if (count($error) > 0) {
-                    var_dump($error);
-                    exit;
+                    foreach($error as $e){
+                        Yii::app()->user->setFlash('danger',$e);
+                    }
                 }
                 if ($model->save()) {
+                    Yii::app()->user->setFlash('success',"Node created successfully.");
                     $this->redirect(array('view', 'id' => $model->id));
                 }
             }

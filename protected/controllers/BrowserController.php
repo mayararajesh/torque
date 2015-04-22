@@ -84,7 +84,7 @@ class BrowserController extends Controller {
     }
 
     private static function browseremote($dir, $dironly) {
-        $dironly = FALSE;
+        #$dironly = FALSE;
         $host = Yii::app()->params->hostDetails['host'];
         $port = Yii::app()->params->hostDetails['port'];
         $user = Yii::app()->user->name;
