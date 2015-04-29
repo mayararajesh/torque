@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+
+<Data>
+    <Job>
+        <Job_Id>128.master</Job_Id>
+        <Job_Name>testjob</Job_Name>
+        <Job_Owner>compute1@master</Job_Owner>
+        <job_state>Q</job_state>
+        <queue>queue1</queue>
+        <server>master</server>
+        <Checkpoint>u</Checkpoint>
+        <ctime>1429857151</ctime>
+        <Error_Path>master:/opt/results/$PBS_JOBID.$PBS_JOBNAME.err</Error_Path>
+        <Hold_Types>n</Hold_Types>
+        <Join_Path>n</Join_Path>
+        <Keep_Files>n</Keep_Files>
+        <Mail_Points>a</Mail_Points>
+        <mtime>1429857151</mtime>
+        <Output_Path>master:/opt/results/$PBS_JOBID.$PBS_JOBNAME.out</Output_Path>
+        <Priority>0</Priority>
+        <qtime>1429857151</qtime>
+        <Rerunable>True</Rerunable>
+        <Resource_List>
+            <neednodes>1:ppn=1</neednodes>
+            <nodect>1</nodect>
+            <nodes>1:ppn=1</nodes>
+        </Resource_List>
+        <Shell_Path_List>/bin/bash</Shell_Path_List>
+        <substate>10</substate>
+        <Variable_List>PBS_O_QUEUE=queue1,PBS_O_HOME=/home/compute1,PBS_O_LOGNAME=compute1,PBS_O_PATH=/usr/lib64/qt-3.3/bin:/usr/local/bin:/bin:/usr/bin:/opt/torque/4.2.9/bin:/opt/torque/4.2.9/sbin,PBS_O_MAIL=/var/mail/compute1,PBS_O_SHELL=/bin/bash,PBS_O_LANG=en_US.UTF-8,PBS_O_WORKDIR=/home/compute1,PBS_O_HOST=master,PBS_O_SERVER=master</Variable_List>
+        <euser>compute1</euser>
+        <egroup>compute1</egroup>
+        <queue_rank>44</queue_rank>
+        <queue_type>E</queue_type>
+        <etime>1429857151</etime>
+        <submit_args>/opt/results/testjob1429857151.sh</submit_args>
+        <fault_tolerant>False</fault_tolerant>
+        <job_radix>0</job_radix>
+        <submit_host>master</submit_host>
+    </Job>
+</Data>
+
+

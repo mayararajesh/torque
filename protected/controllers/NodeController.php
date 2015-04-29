@@ -93,12 +93,12 @@ class NodeController extends Controller {
                 }
                 $sshHost->disconnect();
                 if (count($error) > 0) {
-                    foreach($error as $e){
-                        Yii::app()->user->setFlash('danger',$e);
+                    foreach ($error as $e) {
+                        Yii::app()->user->setFlash('danger', $e);
                     }
                 }
                 if ($model->save()) {
-                    Yii::app()->user->setFlash('success',"Node created successfully.");
+                    Yii::app()->user->setFlash('success', "Node created successfully.");
                     $this->redirect(array('view', 'id' => $model->id));
                 }
             }
@@ -187,6 +187,21 @@ class NodeController extends Controller {
         if (isset($_GET['Node'])) {
             $model->attributes = $_GET['Node'];
         }
+        $host = Yii::app()->params->hostDetails['host'];
+        $port = Yii::app()->params->hostDetails['port'];
+        $user = Yii::app()->user->name;
+        $encryptedPassword = Yii::app()->user->password;
+        $sshHost = new SSH($host, $port, $user);
+        $aes = new AES($encryptedPassword);
+        $nodes = $model->findAll();
+        if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
+            foreach ($nodes as $node) {
+                echo $sshHost->cmd('pbsnodes -a -x ' . $node->name);
+            }
+            
+            #exit;
+        }
+        $sshHost->disconnect();
         #var_dump($model);exit;
         $this->render('admin', array(
             'model' => $model,

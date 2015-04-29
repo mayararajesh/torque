@@ -41,10 +41,10 @@ $(document).ready(function () {
                 '<input id="TaskForm_inputFile' + inputFileCounter + '" type="text" size="40" maxlength="256" name="TaskForm[inputFile][]" readonly="raedonly">' +
                 '</td>' +
                 '<td>' +
-                '<button type="button" name="browse" id="browse' + inputFileCounter + '" class="btn btn-info browse" role="button" title="Open directory browser"><span class="font-icon icon-fa-folder-open"></span></button>' +
+                '<button type="button" name="browse" id="browse' + inputFileCounter + '" class="btn btn-info browse" role="button" title="Open directory browser"><span class="fa fa-folder-open"></span></button>' +
                 '</td>' +
                 '<td>' +
-                '<button class="btn btn-danger remove-file" title="Remove"><i class="font-icon icon-fa-minus-sign"></i></button>' +
+                '<button class="btn btn-danger remove-file" title="Remove"><i class="fa fa-times"></i></button>' +
                 '</td>' +
                 '</tr>';
         $('#file-item-container').append(html);
@@ -94,8 +94,8 @@ $(document).ready(function () {
         },
         'create': function () {
             loadBrowser();
-            $("#btnselect").button({icons: {primary: "ui-icon-circle-check"}});
-            $("#btncancel").button({icons: {primary: "ui-icon-circle-close"}});
+            $("#btnselect").button({icons: {primary: "fa fa-check"}});
+            $("#btncancel").button({icons: {primary: "fa fa-close"}});
         }
     });
 

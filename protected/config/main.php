@@ -46,6 +46,9 @@ return array(
         'fontawesome' => array(
             'class' => 'ext.fontawesome.components.FontAwesome',
         ),
+        'xdetailview' =>  array(
+            'class' => 'ext.widgets.XDetailView',
+        ),
         #uncomment the following to enable URLs in path-format
         'urlManager' => array(
             'urlFormat' => 'path',

@@ -43,17 +43,6 @@ $('.search-form form').submit(function(){
 </div><!-- search-form -->
 
 <?php
-$host = Yii::app()->params->hostDetails['host'];
-$port = Yii::app()->params->hostDetails['port'];
-$sshHost = new SSH($host, $port, 'root');
-$nodes = $model->findAll();
-if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
-    foreach($nodes as $node){
-        echo $sshHost->cmd('pbsnodes -a -x '.$node->name);
-    }
-    $sshHost->disconnect();
-    #exit;
-}
 $this->widget('zii.widgets.grid.CGridView', array(
     'id' => 'node-grid',
     'dataProvider' => $model->search(),
@@ -95,4 +84,7 @@ $this->widget('zii.widgets.grid.CGridView', array(
         ),
     ),
 ));
+$baseUrl = Yii::app()->baseUrl;
+$cs = Yii::app()->getClientScript();
+$cs->registerCssFile($baseUrl . '/css/fontawesome/css/font-awesome.min.css');
 ?>

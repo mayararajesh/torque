@@ -21,4 +21,5 @@ define('INVALID_REQUEST', 101);
 define('DATABASE_ERROR', 102);
 define('COMMAND_ERROR', 103);
 define('AUTHENTICATION_ERROR', 104);
+define('INVALID_ACCESS', 105);
 

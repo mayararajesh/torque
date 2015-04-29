@@ -40,7 +40,7 @@
                     <td>
                         <input id="TaskForm_inputFile" type="text" size="40" maxlength="256" name="TaskForm[inputFile][]" readonly="raedonly"></td>
                     <td>
-                        <button type="button" name="browse5" class="btn btn-info browse" role="button" title="Open directory browser"><span class="font-icon icon-fa-folder-open"></span></button>
+                        <button type="button" name="browse5" class="btn btn-info browse" role="button" title="Open directory browser"><span class="fa fa-folder-open"></span></button>
                     </td>
                 </tr>
             </tbody>
@@ -52,7 +52,7 @@
             <thead>
                 <tr>
                     <td colspan="3" style="text-align: right">
-                        <button title="Add" class="btn btn-success add-file"><i class="font-icon icon-fa-plus-sign"></i></button>
+                        <button title="Add" class="btn btn-success add-file"><i class="fa fa-plus"></i></button>
 
                     </td>
                 </tr>
@@ -111,6 +111,7 @@ $cs = Yii::app()->getClientScript();
 $cs->registerCssFile($baseUrl . '/js/jquery-ui/jquery-ui.min.css');
 $cs->registerCssFile($baseUrl . '/js/jquery-ui/jquery-ui.structure.min.css');
 $cs->registerCssFile($baseUrl . '/js/jquery-ui/jquery-ui.theme.min.css');
+$cs->registerCssFile($baseUrl . '/css/fontawesome/css/font-awesome.min.css');
 $cs->registerCssFile($baseUrl . '/js/jqueryFileTree/jqueryFileTree.css');
 $cs->registerScriptFile($baseUrl . '/js/jquery-ui/jquery-ui.min.js');
 $cs->registerScriptFile($baseUrl . '/js/jqueryFileTree/jqueryFileTree.js');
