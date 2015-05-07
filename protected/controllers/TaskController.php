@@ -58,6 +58,7 @@ class TaskController extends Controller {
             if ($model->validate()) {
                 $script = $this->generateScript($attributes);
                 $params['content'] = $script;
+                $params['scriptName'] = $attributes['name'];
                 $params['show'] = 'editor';
             }
         }
@@ -70,11 +71,12 @@ class TaskController extends Controller {
      */
     public function actionSubmit() {
         if (isset($_POST)) {
-            $scriptName = $_POST['script-name'] . time() . '.sh';
+            #print_r($_POST);exit;
+            $scriptName = $_POST['scriptName'] . time() . '.sh';
             $content = $_POST['codemirror-text'];
             $content = str_replace("\r", "", $content);
             $outPutDir = Yii::app()->params['torque']['outputDir'];
-            $filePath = $outPutDir . '/' . $scriptName;
+            $filePath = $outPutDir . '/' . $scriptName; 
             $commandArray = array();
             $host = Yii::app()->params->hostDetails['host'];
             $port = Yii::app()->params->hostDetails['port'];
@@ -87,13 +89,14 @@ class TaskController extends Controller {
                 if ($sshHost->writeStringToFile($filePath, $content)) {
                     $sshHost->cmd("chmod 0744 {$filePath}");
                     $message = $sshHost->cmd(Yii::app()->params['torque']['qsubBin'] . "/qsub {$filePath}");
-                    $messages = split('.', $message);
+                    $messages = explode('.', $message);
                     if (count($messages) == 2) {
                         Yii::app()->user->setFlash('success', $message . " Job suceessfully submitted.");
                     } else {
                         Yii::app()->user->setFlash('error', $message);
                     }
                     $sshHost->disconnect();
+                    REQUIRED::updateTorqueWithDB();
                 }
             } else {
                 unset($aes);
@@ -115,10 +118,11 @@ class TaskController extends Controller {
     private function generateScript($attributes) {
         $outPutDir = Yii::app()->params['torque']['outputDir'];
         $script = "#!/bin/sh" . "\n" .
+                "mkdir $outPutDir/{\$PBS_JOBID}_\{\$PBS_JOBNAME}\n" .
                 "#PBS -N {$attributes['name']}" . "\n" .
                 "#PBS -S /bin/bash" . "\n" .
-                "#PBS -e $outPutDir/\$PBS_JOBID.\$PBS_JOBNAME.err" . "\n" .
-                "#PBS -o $outPutDir/\$PBS_JOBID.\$PBS_JOBNAME.out" . "\n" .
+                "#PBS -e $outPutDir/error.err" . "\n" .
+                "#PBS -o $outPutDir/output.out" . "\n" .
                 "#PBS -q {$attributes['queue']}" . "\n" .
                 "#PBS -l nodes={$attributes['nodes']}:ppn={$attributes['ppn']}" . "\n" .
                 "cd \$PBS_O_WORKDIR" . "\n" .
@@ -143,13 +147,19 @@ class TaskController extends Controller {
         $params['order'] = "job_id DESC";
         foreach ($tasks->findAll($params) as $key => $value) {
             array_push($stringJSON, json_decode($value->status, TRUE));
+            $stringJSON[$key]['application'] = $value->application;
             $stringJSON[$key]['id'] = explode('.', $stringJSON[$key]['Job_Id']);
             $stringJSON[$key]['host'] = $stringJSON[$key]['id'][1];
             $stringJSON[$key]['id'] = $stringJSON[$key]['id'][0];
             unset($stringJSON[$key]['Job_Id']);
         }
-        $this->render('list', array('model' => $stringJSON));
-//        }
+        if (isset($_GET['ajax'])) {
+            $this->renderPartial('list_search', array(
+                'model' => $stringJSON
+            ));
+        } else {
+            $this->render('list', array('model' => $stringJSON));
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -159,33 +169,31 @@ class TaskController extends Controller {
      * @param Integer $id
      */
     public function actionDetails($id = NULL) {
-        $attributes = array();
         $taskDetails = array();
         $task = new Job();
         $taskDetails = $task->findAllByAttributes(array('job_id' => $id));
+        if (isset($taskDetails[0])) {
+            $taskDetails = json_decode($taskDetails[0]->status, TRUE);
+            $taskDetails['Job_Id'] = explode('.', $taskDetails['Job_Id']);
+            $taskDetails['Job_Id'] = $taskDetails['Job_Id'][0];
+            $taskDetails['sub_state'] = isset($taskDetails['substate']) ? $taskDetails['substate'] : "";
+            unset($taskDetails['substate']);
+            $taskDetails['check_point'] = $taskDetails['Checkpoint'];
+            unset($taskDetails['Checkpoint']);
+            $taskDetails['creation_time'] = date('Y-M-d H:i:s', (int) $taskDetails['ctime']);
+            unset($taskDetails['ctime']);
+            $taskDetails['m_time'] = date('Y-M-d H:i:s', (int) $taskDetails['mtime']);
+            unset($taskDetails['mtime']);
+            $taskDetails['queue_time'] = date('Y-M-d H:i:s', (int) $taskDetails['qtime']);
+            unset($taskDetails['qtime']);
+            $taskDetails['elapsed_time'] = date('Y-M-d H:i:s', (int) $taskDetails['etime']);
+            unset($taskDetails['etime']);
+        }
         $this->render('details', array(
-            'attributes' => $attributes,
             'taskDetails' => $taskDetails,
         ));
     }
 
-    //--------------------------------------------------------------------------
-    /*
-      private function convertResponseToJSON($response, $taskDetails, &$attributes) {
-      $xml = simplexml_load_string($response);
-      $json = json_encode($xml);
-      $taskDetails = json_decode($json, TRUE);
-      $taskDetails = $taskDetails['Job'];
-      $jobDetails = explode('.', $taskDetails['Job_Id']);
-      $taskDetails['Job_Id'] = $jobDetails[0];
-      foreach ($taskDetails as $k => $task) {
-      $tmp = preg_replace('!_+!', ' ', $k);
-      $tmp = ucwords(strtolower($tmp));
-      $attributes[$k] = $tmp;
-      }
-      return $taskDetails;
-      }
-     */
     //--------------------------------------------------------------------------
     /**
      * Holds the specified job in torque(in specified queue)
@@ -193,12 +201,13 @@ class TaskController extends Controller {
      * @param integer $id
      */
     public function actionHold($id = NULL) {
+        #exit;
         $host = Yii::app()->params->hostDetails['host'];
         $port = Yii::app()->params->hostDetails['port'];
         $user = Yii::app()->user->name;
         $accessJob = TRUE;
         if ($user !== "root") {
-            if (!$this->isValidJob($id,$user)) {
+            if (!$this->isValidJob($id, $user)) {
                 Yii::app()->user->setFlash('danger', "Unable to access the job.Seems it does not belongs to you.");
                 $accessJob = FALSE;
             }
@@ -209,13 +218,15 @@ class TaskController extends Controller {
         if ($accessJob && $sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
             unset($aes);
             $cmd = "qhold " . $id;
+            #echo $cmd;
+            #exit;
             $response = $sshHost->cmd($cmd);
             if ($response !== '') {
                 Yii::app()->user->setFlash('danger', $response);
             } else {
                 Yii::app()->user->setFlash('success', "Successfully holds job #" . $id);
             }
-            $this->updateJobsDB();
+            REQUIRED::updateTorqueWithDB();
         }
         $sshHost->disconnect();
         $this->redirect(Yii::app()->createUrl('task/list'));
@@ -232,7 +243,7 @@ class TaskController extends Controller {
         $user = Yii::app()->user->name;
         $accessJob = TRUE;
         if ($user !== "root") {
-            if (!$this->isValidJob($id,$user)) {
+            if (!$this->isValidJob($id, $user)) {
                 Yii::app()->user->setFlash('danger', "Unable to access the job.Seems it does not belongs to you.");
                 $accessJob = FALSE;
             }
@@ -249,28 +260,11 @@ class TaskController extends Controller {
             } else {
                 Yii::app()->user->setFlash('success', "Successfully releases job #" . $id);
             }
-            $this->updateJobsDB();
+            REQUIRED::updateTorqueWithDB();
         }
         $sshHost->disconnect();
 
         $this->redirect(Yii::app()->createUrl('task/list'));
-    }
-
-    //--------------------------------------------------------------------------
-    /**
-     * Updates the database with torque whenever is required.
-     */
-    private function updateJobsDB() {
-        # create curl resource
-        $ch = curl_init();
-        # set url
-        curl_setopt($ch, CURLOPT_URL, Yii::app()->createAbsoluteUrl('crawler/index?id=jobs'));
-        # return the transfer as a string
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        # $output contains the output string
-        $output = curl_exec($ch);
-        # close curl resource to free up system resources
-        curl_close($ch);
     }
 
     //--------------------------------------------------------------------------
@@ -288,7 +282,7 @@ class TaskController extends Controller {
             $user = Yii::app()->user->name;
             $accessJob = TRUE;
             if ($user !== "root") {
-                if (!$this->isValidJob($id,$user)) {
+                if (!$this->isValidJob($id, $user)) {
                     $responseArray['status'] = INVALID_ACCESS;
                     $responseArray['message'] = "Unable to access the job.Seems it does not belongs to you.";
                     $accessJob = FALSE;
@@ -309,7 +303,7 @@ class TaskController extends Controller {
                     $responseArray['message'] = "Successfully deleted job #" . $_POST['job_id'];
                     Yii::app()->user->setFlash('info', $responseArray['message']);
                 }
-                $this->updateJobsDB();
+                REQUIRED::updateTorqueWithDB();
             }
             $sshHost->disconnect();
         }
@@ -327,8 +321,8 @@ class TaskController extends Controller {
     private function isValidJob($id, $user) {
         $task = new Job();
         return $task->exists('job_id=:job_id AND submitted_by=:submitted_by', array(
-            ':job_id' => $id, 
-            ':submitted_by' => $user));
+                    ':job_id' => $id,
+                    ':submitted_by' => $user));
     }
 
 }

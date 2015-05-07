@@ -12,7 +12,9 @@
         <textarea id="codemirror-shell-editor"><?php echo isset($content) ? $content : ''; ?></textarea>
     </div>
     <div class="row">
+        <input type="hidden" name="script-name" id="script-name" value="<?php echo $scriptName;?>" />
         <div class="form"> 
+            
             <?php
             $form = $this->beginWidget('CActiveForm', array(
                 'id' => 'task-submit-form',
@@ -20,8 +22,8 @@
                 'action' => Yii::app()->createUrl('task/submit'),#'/torque/index.php/task/submit'
             ));
             ?>
-
             <div id="codemirror-text">
+                
                 <?php echo $submitButton = CHtml::submitButton('Submit Task', array('id' => 'submitTask', 'class' => 'btn btn-success')); ?>
             </div>
             <?php $this->endWidget(); ?>

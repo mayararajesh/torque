@@ -30,7 +30,8 @@ $(document).ready(function () {
             }
         }
         if (strLen > 0) {
-            $('#codemirror-text').append('<input type="hidden" name="script-name" value="' + text + '"/>');
+            var fileName = $('#script-name').val();
+            $('#codemirror-text').append('<input type="hidden" name="scriptName" value="' + fileName + '"/>');
             text = codemirror.getValue();
             text = text.replace("\r", "");
             $('#codemirror-text').append('<input type="hidden" name="codemirror-text" value="' + codemirror.getValue() + '"/>');

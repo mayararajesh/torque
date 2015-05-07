@@ -17,14 +17,14 @@ class CrawlerController extends Controller {
      * @param string $id
      */
     public function actionIndex($id = NULL) {
-        if ($id == "jobs") {
-            $this->updateJobInfo();
-        }
+        $this->updateNodeInfo();
+        $this->updateQueueInfo();
+        $this->updateJobInfo();
     }
 
     //--------------------------------------------------------------------------
     /**
-     * Updates the jobs table with qstat in torque
+     * Updates the jobs table with qstat from torque
      */
     private function updateJobInfo() {
         $hostDetails = Yii::app()->params['hostDetails'];
@@ -73,6 +73,180 @@ class CrawlerController extends Controller {
                 }
             }
         }
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Updates queue information from torque
+     */
+    private function updateQueueInfo() {
+        $hostDetails = Yii::app()->params['hostDetails'];
+        $sshHost = new SSH($hostDetails['host'], $hostDetails['port'], 'root');
+        if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+            $cmd = "qstat -Qf";
+            $response = $sshHost->cmd($cmd);
+            $response = str_replace("\r\n\t", "", $response);
+            $queueArray = explode("Queue:", $response);
+            unset($queueArray[0]);
+            $queueArray = array_filter($queueArray);
+            foreach ($queueArray as $kq => $queue) {
+                $queue = explode("\r\n", $queue);
+                foreach ($queue as $k => $q) {
+                    $q = explode("=", $q);
+                    #echo trim($q[0]);
+                    if (!isset($q[1]) && !empty($q[0])) {
+                        $q[1] = trim($q[0]);
+                        $q[0] = "name";
+                    }
+                    if (!empty($q[0])) {
+                        $queue[trim($q[0])] = !is_array($q[1]) ? trim($q[1]) : $q[1];
+                    }
+                    unset($queue[$k]);
+                }
+                $queue = array_filter($queue);
+                $stateCount = explode(" ", trim($queue['state_count']));
+                $stateCount = array_filter($stateCount);
+                $tempArr = array();
+                foreach ($stateCount as $sc) {
+                    $sc = explode(':', $sc);
+                    $tempArr[trim($sc[0])] = trim($sc[1]);
+                }
+                $queue['state_count'] = $tempArr;
+                $queueArray[$kq] = array_filter($queue);
+            }
+            $queueArray = array_values($queueArray);
+            foreach ($queueArray as $key => $queue) {
+                $resource = array();
+                foreach ($queue as $k => $q) {
+                    $tkq = explode('.', $k);
+                    if (count($tkq) > 1) {
+                        $tkq[0] = trim($tkq[0]);
+                        $tkq[1] = trim($tkq[1]);
+                        $queue[$tkq[0]] = isset($queue[$tkq[0]]) ? $queue[$tkq[0]] : array();
+                        $queue[$tkq[0]][$tkq[1]] = $queue[$k];
+                        unset($queue[$k]);
+                        #$queue[$tkq[0]] = $queue[$tkq[0]];
+                        if (!in_array($tkq[0], $resource)) {
+                            array_push($resource, $tkq[0]);
+                        }
+                    }
+                    $queueArray[$key] = array_filter($queue);
+                }
+                $queueArray = array_values($queueArray);
+                foreach ($resource as $r) {
+                    $resourceObj = NULL;
+                    switch ($r) {
+                        case "resources_available":
+                            $resourceObj = new ResourcesAvailable();
+                            break;
+                        case "resources_default":
+                            $resourceObj = new ResourcesDefault();
+                            break;
+                        case "resources_max":
+                            $resourceObj = new ResourcesMax();
+                            break;
+                        case "resources_min":
+                            $resourceObj = new ResourcesMin();
+                            break;
+                    }
+                    if ($resourceObj !== NULL) {
+                        $resourceObj->attributes = $queueArray[$key][$r];
+                        $model = new Queue();
+                        $queue = $model->findByAttributes(array('name' => $queueArray[$key]['name']));
+                        if (isset($queue->id)) {
+                            $queue = $resourceObj->findByAttributes(array('queue_id' => $queue->id));
+                            if (isset($queue->id)) {
+                                $resourceObj->updateAll($queueArray[$key][$r], 'queue_id=:queue_id', array(':queue_id' => $queue->queue_id));
+                            } else {
+                                $resourceObj->save(FALSE);
+                            }
+                        }
+                    }
+                    unset($resourceObj);
+                }
+            }
+            $queueNames = "";
+            foreach ($queueArray as $queue) {
+                $queueNames .= "'" . $queue['name'] . "',";
+                $model = new Queue();
+                $q = $model->findByAttributes(array('name' => $queue['name']));
+                if (isset($q->id)) {
+                    $model->updateAll(array('status' => json_encode($queue)), 'id=:id', array(':id' => $q->id));
+                } else {
+                    if (isset($queue['enabled']) && $queue['enabled'] === "True") {
+                        $queue['enabled'] = TRUE;
+                    } else {
+                        $queue['enabled'] = FALSE;
+                    }
+                    if (isset($queue['started']) && $queue['started'] === "True") {
+                        $queue['started'] = TRUE;
+                    } else {
+                        $queue['started'] = FALSE;
+                    }
+                    $attributes = array(
+                        'name' => $queue['name'],
+                        'priority' => isset($queue['Priority']) ? $queue['Priority'] : 0,
+                        'enabled' => isset($queue['enabled']) ? $queue['enabled'] : FALSE,
+                        'queue_type' => 'execution',
+                        'started' => isset($queue['started']) ? $queue['started'] : FALSE,
+                        'status' => json_encode($queue)
+                    );
+                    $model->attributes = $attributes;
+                    $model->save(FALSE);
+                }
+            }
+            $queueNames = "(" . trim($queueNames, ',') . ")";
+            $model = new Queue();
+            $model->deleteAll('name NOT IN' . $queueNames);
+        }
+        $sshHost->disconnect();
+    }
+
+    //--------------------------------------------------------------------------
+    public function updateNodeInfo() {
+        $hostDetails = Yii::app()->params['hostDetails'];
+        $sshHost = new SSH($hostDetails['host'], $hostDetails['port'], 'root');
+        if ($sshHost->isConnected() && $sshHost->authenticate_pass('root123')) {
+            $cmd = "pbsnodes -x";
+            $responseXML = $sshHost->cmd($cmd);
+            if ($responseXML !== "") {
+                try {
+                    $xml = simplexml_load_string($responseXML);
+                    $json = json_encode($xml);
+                    $nodeDetails = json_decode($json, TRUE);
+                    if (!isset($nodeDetails['Node'][0])) {
+                        $temp = $nodeDetails['Node'];
+                        $nodeDetails['Node'] = array($temp);
+                    }
+                    $nodeNames = "";
+                    foreach ($nodeDetails['Node'] as $key => $node) {
+                        $nodeNames .= "'" . $node['name'] . "',";
+                        if (isset($node['status'])) {
+                            $status = explode(",", $node['status']);
+                            foreach ($status as $k => $s) {
+                                $tempStatus = explode("=", $s);
+                                $status[$tempStatus[0]] = isset($tempStatus[1]) ? $tempStatus[1] : "";
+                                unset($status[$k]);
+                            }
+                            $node['status'] = $status;
+                        }
+                        $nodeDetails['Node'][$key] = $node;
+                        $nodeObj = new Node();
+                        $nodeObj->updateAll(array(
+                            'status' => json_encode($node),
+                            'np' => isset($node['np']) ? $node['np'] : 1,
+                            'gpus' => isset($node['gpus']) ? $node['gpus'] : NULL,
+                        ),'name=:name',array(':name'=>$node['name']));
+                    }
+                    $nodeNames = "(" . trim($nodeNames, ",") . ")";
+                    $node = new Node();
+                    $node->deleteAll("name NOT IN" . $nodeNames);
+                } catch (Exception $ex) {
+                    print_r($ex);
+                }
+            }
+        }
+        $sshHost->disconnect();
     }
 
 }

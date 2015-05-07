@@ -32,11 +32,13 @@ class Node extends CActiveRecord
 		// will receive user inputs.
 		return array(
 			array('name', 'required'),
+            array('name', 'length', 'max'=>255),
+            array('np', 'default','setOnEmpty' => TRUE, 'value' => 1),
+            #array('gpus', 'default','setOnEmpty' => TRUE, 'value' => 0),
 			array('np, gpus, mics', 'numerical', 'integerOnly'=>true),
-			array('name', 'length', 'max'=>255),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('name, np, gpus, mics', 'safe', 'on'=>'search'),
+			array('name, np, gpus, mics,status', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -62,6 +64,7 @@ class Node extends CActiveRecord
 			'np' => '#Processors',
 			'gpus' => '#GPU',
 			'mics' => '#Phi Cards',
+            'status' => 'Status'
 		);
 	}
 

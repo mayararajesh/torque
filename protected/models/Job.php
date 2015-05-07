@@ -28,10 +28,10 @@ class Job extends CActiveRecord
 		// will receive user inputs.
 		return array(
 			array('job_id', 'numerical', 'integerOnly'=>true),
-			array('status, is_deleted,submitted_by', 'safe'),
+			array('status, is_deleted,submitted_by,application', 'safe'),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, job_id, status, is_deleted,submitted_by', 'safe', 'on'=>'search'),
+			array('id, job_id, status, is_deleted,submitted_by,application', 'safe', 'on'=>'search'),
 		);
 	}
 

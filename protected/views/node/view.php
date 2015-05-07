@@ -1,4 +1,9 @@
-<?php
+<style>
+    .null{
+        color : red !important;
+    }
+</style>
+    <?php
 /* @var $this NodeController */
 /* @var $model Node */
 
@@ -6,7 +11,11 @@ $this->breadcrumbs=array(
 	'Nodes'=>array('index'),
 	$model->name,
 );
-
+foreach (Yii::app()->user->getFlashes() as $key => $message) {
+    if (Yii::app()->user->hasFlash($key)) {
+        echo '<div class="flash-' . $key . '">' . $message . "</div>";
+    }
+}
 $this->menu=array(
 	array('label'=>'List Node', 'url'=>array('index')),
 	array('label'=>'Create Node', 'url'=>array('create')),
@@ -16,7 +25,7 @@ $this->menu=array(
 );
 ?>
 
-<h1>Node :: <?php echo $model->name ?></h1>
+<h1>Node :: <a href="<?php echo Yii::app()->createUrl('node/details/',array('id'=> $model->id));?>"><?php echo $model->name ?></a></h1>
 
 <?php $this->widget('zii.widgets.CDetailView', array(
 	'data'=>$model,

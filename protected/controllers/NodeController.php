@@ -38,7 +38,7 @@ class NodeController extends Controller {
                 'users' => array('@'),
             ),
             array('allow', // allow authenticated user to perform 'create' and 'update' actions
-                'actions' => array('create', 'update', 'online', 'offline'),
+                'actions' => array('create', 'update', 'online', 'offline','details'),
                 'users' => array('root'),
             ),
             array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -72,7 +72,8 @@ class NodeController extends Controller {
         // Uncomment the following line if AJAX validation is needed
         // $this->performAjaxValidation($model);
         if (isset($_POST['Node'])) {
-            $model->attributes = $_POST['Node'];
+            #print_r($_POST['Node']);exit;
+            $attributes = $_POST['Node'];
             $host = Yii::app()->params->hostDetails['host'];
             $port = Yii::app()->params->hostDetails['port'];
             $user = Yii::app()->user->name;
@@ -81,13 +82,13 @@ class NodeController extends Controller {
             $sshHost = new SSH($host, $port, $user);
             if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
                 $error = array();
-                $cmd = 'qmgr -c "create node ' . $model->attributes['name'] . '"';
+                $cmd = 'qmgr -c "create node ' . $attributes['name'] . '"';
                 $cmd = $sshHost->cmd($cmd);
                 if ($cmd === "") {
-                    if ($model->attributes['np'] === "") {
-                        $model->attributes['np'] = 1;
-                    }
-                    $this->setNodeProps($sshHost, $model);
+                    if ($attributes['np'] === "") {
+                        $attributes['np'] = 1;
+                    } 
+                    $this->setNodeProps($sshHost, $attributes);
                 } else {
                     array_push($error, $cmd);
                 }
@@ -97,6 +98,7 @@ class NodeController extends Controller {
                         Yii::app()->user->setFlash('danger', $e);
                     }
                 }
+                $model->attributes = $attributes;
                 if ($model->save()) {
                     Yii::app()->user->setFlash('success', "Node created successfully.");
                     $this->redirect(array('view', 'id' => $model->id));
@@ -122,7 +124,7 @@ class NodeController extends Controller {
         #$error = array();
         if (isset($_POST['Node'])) {
             $_POST['Node']['name'] = $node;
-            $model->attributes = $_POST['Node'];
+            $attributes = $_POST['Node'];
             $host = Yii::app()->params->hostDetails['host'];
             $port = Yii::app()->params->hostDetails['port'];
             $user = Yii::app()->user->name;
@@ -130,7 +132,8 @@ class NodeController extends Controller {
             $aes = new AES($encryptedPassword);
             $sshHost = new SSH($host, $port, $user);
             if ($sshHost->isConnected() && $sshHost->authenticate_pass($aes->decrypt())) {
-                $this->setNodeProps($sshHost, $model);
+                $this->setNodeProps($sshHost, $attributes);
+                $model->attributes = $attributes;
                 if ($model->save()) {
                     $this->redirect(array('view', 'id' => $model->id));
                 }
@@ -244,12 +247,11 @@ class NodeController extends Controller {
      * @param CHANNEL $sshHost
      * @param OBJECT $model
      */
-    private function setNodeProps($sshHost, $model) {
+    private function setNodeProps($sshHost, &$model) {
         $error = array();
         # Number of processors per node
-        if ($model->attributes['np'] !== "") {
-
-            $cmd = 'qmgr -c "set node ' . $model->attributes['name'] . ' np=' . $model->attributes['np'] . '"';
+        if ($model['np'] !== "") {
+            $cmd = 'qmgr -c "set node ' . $model['name'] . ' np=' . $model['np'] . '"';
             $cmd = $sshHost->cmd($cmd);
             if ($cmd !== "") {
                 array_push($error, $cmd);
@@ -257,8 +259,9 @@ class NodeController extends Controller {
             }
         }
         # Number of gpus per node
-        if ($model->attributes['gpus'] !== "" && (int) $model->attributes['gpus'] !== 0) {
-            $cmd = 'qmgr -c "set node ' . $model->attributes['name'] . ' gpus=' . $model->attributes['gpus'] . '"';
+        
+        if ($model['gpus'] !== "" && (int) $model['gpus'] !== 0) {
+            $cmd = 'qmgr -c "set node ' . $model['name'] . ' gpus=' . $model['gpus'] . '"';
             $cmd = $sshHost->cmd($cmd);
             if ($cmd !== "") {
                 array_push($error, $cmd);
@@ -266,8 +269,8 @@ class NodeController extends Controller {
             }
         } else {
             #var_dump($sshHost->isConnected());
-            $model->attributes['gpus'] = "";
-            $command = $sshHost->cmd("pbsnodes -x " . $model->attributes['name']);
+            $model['gpus'] = "";
+            $command = $sshHost->cmd("pbsnodes -x " . $model['name']);
             #var_dump($command);
             $commandSyntax = split(':', $command);
             if ($commandSyntax[0] !== "pbsnodes") {
@@ -281,10 +284,10 @@ class NodeController extends Controller {
                     $position = 2;
                 }
 
-                $cmd = "cat -n " . Yii::app()->params['torque']['serverPriv'] . "/nodes | grep -i " . $model->name . " | awk -F \" \" '{print $1}'";
+                $cmd = "cat -n " . Yii::app()->params['torque']['serverPriv'] . "/nodes | grep -i " . $model['name'] . " | awk -F \" \" '{print $1}'";
                 $line = $sshHost->cmd($cmd);
                 if ($line = (int) $line) {
-                    $cmd = "cat " . Yii::app()->params['torque']['serverPriv'] . "/nodes | grep -i " . $model->name . " | awk -F \" \" '{print \$$position}'";
+                    $cmd = "cat " . Yii::app()->params['torque']['serverPriv'] . "/nodes | grep -i " . $model['name'] . " | awk -F \" \" '{print \$$position}'";
                     $current = $sshHost->cmd($cmd);
                     $cusrrentArr = split('=', $current);
                     if ($cusrrentArr[0] == 'gpus') {
@@ -303,8 +306,8 @@ class NodeController extends Controller {
             }
         }
         # Number of mics per node
-        if ($model->attributes['mics'] !== "") {
-            $cmd = 'qmgr -c "set node ' . $model->attributes['name'] . ' mics=' . $model->attributes['mics'] . '"';
+        if ($model['mics'] !== "") {
+            $cmd = 'qmgr -c "set node ' . $model['name'] . ' mics=' . $model['mics'] . '"';
             $cmd = $sshHost->cmd($cmd);
             if ($cmd !== "") {
                 array_push($error, $cmd);
@@ -358,7 +361,13 @@ class NodeController extends Controller {
         }
         $this->redirect(array('admin'));
     }
-
+    //--------------------------------------------------------------------------
+    
+    public function actionDetails($id){
+        REQUIRED::updateTorqueWithDB();
+        $model = $this->loadModel($id);
+        $this->render('details',array('model' => $model));
+    }
 }
 
 # End of the NodeController Class

@@ -19,6 +19,12 @@
     .queue-status-ban{
         color:red;
     }
+    .grid-view .pager{
+        vertical-align: text-top !important;
+    }
+    .null{
+        color: red !important;
+    }
 </style>
 <?php
 /* @var $this TaskController */
@@ -44,123 +50,8 @@ $this->menu = array(
     }
     ?>
 </div>
-<?php
-$dataProvider = new CArrayDataProvider($model, array(
-    'id' => 'id',
-    'pagination' => array(
-        'pageSize' => 10
-    ),
-        ));
-$this->widget('zii.widgets.grid.CGridView', array(
-    'id' => 'task-list',
-    'dataProvider' => $dataProvider,
-    'columns' => array(
-        array(
-            'name' => 'id',
-            'type' => 'raw',
-            'header' => 'Job Id',
-            'value' => function($data) {
-                return $data['id'];
-            }),
-        array(
-            'name' => 'Job_Name',
-            'header' => 'Job Name'
-        ),
-        array(
-            'name' => 'host',
-            'header' => 'Submitted Host'
-        ),
-        array(
-            'name' => 'Job_Owner',
-            'header' => 'Submitted By'
-        ),
-        array(
-            'name' => 'queue',
-            'header' => 'Queue'
-        ),
-        array(
-            'name' => 'job_state',
-            'header' => 'Job State'
-        ),
-        array(
-            'name' => 'etime',
-            'header' => 'Elapsed Time'
-        ),
-        test()
-    ),
-));
-$baseUrl = Yii::app()->baseUrl;
-$cs = Yii::app()->getClientScript();
-$cs->registerCssFile($baseUrl . '/css/fontawesome/css/font-awesome.min.css');
-
-function test() {
-    return array(
-        'class' => 'CButtonColumn',
-        'template' => '{View}  {Status}  {Delete}',
-        'buttons' => array(
-            'View' => array(
-                'class' => 'delete-job',
-                'label' => '<i class="font-icon fa fa-search"></i>',
-                'imageUrl' => false,
-                'url' => function($data) {
-                    return Yii::app()->createUrl('task/details', array('id' => (int) $data['id']));
-                },
-                        'options' => array(
-                            'title' => 'Show Job Details'
-                        ),
-                    ),
-                    'Status' => array(
-                        'label' => '<i class="font-icon font-icon-status fa fa-pause"></i>',
-                        'imageUrl' => false,
-                        'url' => function($data) {
-                            if (trim($data['job_state']) === "Q") {
-                                return Yii::app()->createUrl('task/hold/', array('id' => (int) $data['id']));
-                            } else {
-                                return Yii::app()->createUrl('task/release/', array('id' => (int) $data['id']));
-                            }
-                        },
-                                'options' => array(
-                                    'title' => 'Hold/Release Job'
-                                ),
-                            ),
-                            'Delete' => array(
-                                'label' => '<i class="delete-job font-icon fa fa-trash-o"></i>',
-                                'imageUrl' => false,
-                                'url' => function($d) {
-                                    return 'javascript:void(0)';
-                                },
-                                'options' => array(
-                                    'title' => 'Delete Job'
-                                ),
-                            ),
-                        ),
-                    );
-                }
-                ?>
-                <script type="text/javascript">
-                    var REQUEST_URL = "<?php echo Yii::app()->createAbsoluteUrl("task/delete"); ?>";
-    $(document).ready(function () {
-        $('body').on('click', '.delete-job', function () {
-            var deleteJob = confirm("Are sure to delete this job?");
-            if (deleteJob) {
-                var jobId = $(this).closest('tr').find('td:eq(0)').text();
-                $.post(REQUEST_URL, {
-                    job_id: jobId
-                },
-                function (response) {
-                    if (response.status == 100) {
-                        location.reload();
-                    } else {
-                        var html = '<div class="alert alert-danger">' +
-                                '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
-                                '<strong> ' + response.message + '</strong></div>';
-                        $('.messages').html(html);
-                    }
-                },
-                        'json');
-            }
-        });
-
+<script type="text/javascript">
+    function initilizeGridView() {
         /* deletes the links for which are having hold status  and delte links hold 
          * & delete links for having status Completed */
         var jobListTableBody = $('#task-list').find('table').find('tbody');
@@ -186,7 +77,9 @@ function test() {
                     jobStateObj.html('<i class="fa fa-arrow-right fa-2x"><i class="queue-status-icon queue-status-icon-border fa fa-ellipsis-h fa-3x"></i></i>');
                     break;
                 case "R":
-                    jobStateObj.html('<i class="queue-status-icon queue-status-icon-border fa fa-spinner fa-pulse fa-3x"></i>');
+                    jobStateObj.html('<i class="queue-status-icon fa fa-spinner fa-pulse fa-3x"></i>');
+                    actionTD.find('a:eq(1)').remove();
+                    actionTD.find('a:eq(1)').remove();
                     break;
                 case "E":
                     jobStateObj.html('<i class="queue-status-icon fa fa-sign-out fa-3x"></i>');
@@ -199,13 +92,44 @@ function test() {
                     break;
                 case "W":
                     jobStateObj.html('<span class="fa-stack fa-3x">'
-                            +'<i class="fa fa-spinner fa-pulse fa-stack-1x"></i>'
-                            +'<i class="fa fa-ban fa-stack-2x"></i>'
-                            +'</span>');
+                            + '<i class="fa fa-spinner fa-pulse fa-stack-1x"></i>'
+                            + '<i class="fa fa-ban fa-stack-2x"></i>'
+                            + '</span>');
                     break;
             }
-            
-        });
-    });
 
+        });
+    }
+    var REQUEST_URL = "<?php echo Yii::app()->createAbsoluteUrl("task/delete"); ?>";
+    $(document).ready(function () {
+        $('body').on('click', '.delete-job', function () {
+            var deleteJob = confirm("Are sure to delete this job?");
+            if (deleteJob) {
+                var jobId = $(this).closest('tr').find('td:eq(0)').text();
+                $.post(REQUEST_URL, {
+                    job_id: jobId
+                },
+                function (response) {
+                    if (response.status == 100) {
+                        location.reload();
+                    } else {
+                        var html = '<div class="alert alert-danger">' +
+                                '<button type="button" class="close" data-dismiss="alert">&times;</button>' +
+                                '<strong> ' + response.message + '</strong></div>';
+                        $('.messages').html(html);
+                    }
+                },
+                        'json');
+            }
+        });
+        initilizeGridView();
+    });
 </script>
+<?php
+$this->renderPartial('list_search', array(
+    'model' => $model
+));
+$baseUrl = Yii::app()->baseUrl;
+$cs = Yii::app()->getClientScript();
+$cs->registerCssFile($baseUrl . '/css/fontawesome/css/font-awesome.min.css');
+?>

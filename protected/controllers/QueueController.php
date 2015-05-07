@@ -37,11 +37,11 @@ class QueueController extends Controller {
     public function accessRules() {
         return array(
             array('allow', // allow all users to perform 'index' and 'view' actions
-                'actions' => array( 'getQueueList'),
+                'actions' => array('getQueueList'),
                 'users' => array('@'),
             ),
             array('allow', // allow authenticated user to perform 'create' and 'update' actions
-                'actions' => array('index', 'view','create', 'update', 'resource', 'acl'),
+                'actions' => array('index', 'details', 'view', 'create', 'update', 'resource', 'acl'),
                 'users' => array('root'),
             ),
             array('allow', // allow admin user to perform 'admin' and 'delete' actions
@@ -101,12 +101,12 @@ class QueueController extends Controller {
             $commandArray = array();
             $formModelObj->attributes = $attributes;
             if ($formModelObj->validate()) {
-                $attributes = $formModelObj->attributes;
+                $attrs = $formModelObj->attributes;
                 $cmd = 'qmgr -c "create queue ' . $attributes['name'] . ' queue_type=' . $attributes['queue_type'] . '"';
                 array_push($commandArray, $cmd);
                 $tempStr = "";
-                if (isset($attributes['disallowed_types'])) {
-                    foreach ($attributes['disallowed_types'] as $attribute) {
+                if (isset($attrs['disallowed_types'])) {
+                    foreach ($attrs['disallowed_types'] as $attribute) {
                         $tempStr .= $attribute . ",";
                         $cmd = 'qmgr -c "set queue ' . $attributes['name'] . ' disallowed_types+=' . $attribute . '"';
                         array_push($commandArray, $cmd);
@@ -755,6 +755,14 @@ class QueueController extends Controller {
             $sshHost->disconnect();
         }
         echo json_encode($responseArray);
+    }
+
+    //--------------------------------------------------------------------------
+
+    public function actionDetails($id) {
+        REQUIRED::updateTorqueWithDB();
+        $model = $this->loadModel($id);
+        $this->render('details', array('model' => $model));
     }
 
 }

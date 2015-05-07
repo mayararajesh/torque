@@ -27,7 +27,7 @@ $this->menu = array(
     </div>
     <?php
     if ($show == "editor") {
-        $this->renderPartial('editor', array('content' => $content));
+        $this->renderPartial('editor', array('content' => $content,'scriptName'=>$scriptName));
     } else {
         $params['model'] = $model;
         if (isset($queues)) {

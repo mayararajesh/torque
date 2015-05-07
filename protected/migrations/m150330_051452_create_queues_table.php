@@ -41,6 +41,7 @@ class m150330_051452_create_queues_table extends CDbMigration {
             'acl_host_enable' => 'BOOLEAN DEFAULT FALSE',
             'acl_logic_or' => 'BOOLEAN DEFAULT FALSE',
             'acl_user_enable' => 'BOOLEAN DEFAULT FALSE',
+            'status' => 'TEXT',
         ));
         $this->createTable('resources_available', array(
             'id' => 'SERIAL PRIMARY KEY',

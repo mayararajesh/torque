@@ -46,13 +46,13 @@ class Queue extends CActiveRecord {
             array('keep_completed, kill_delay, max_queuable, max_running, max_user_queuable, max_user_run, priority', 'numerical', 'integerOnly' => true),
             array('name, required_login_property', 'length', 'max' => 128),
             array('features_required', 'length', 'max' => 30),
-            array('disallowed_types, enabled, queue_type, started', 'safe'),
+            array('disallowed_types, enabled, queue_type, started,status', 'safe'),
             array('disallowed_types,required_login_property', 'default', 'setOnEmpty' => TRUE, 'value' => NULL),
             array('enabled,started,acl_group_enable,acl_group_sloppy,acl_logic_or,acl_user_enable', 'default', 'setOnEmpty' => TRUE, 'value' => FALSE),
             array('acl_host_enable', 'default', 'setOnEmpty' => TRUE, 'value' => TRUE),
             // The following rule is used by search().
             // @todo Please remove those attributes that should not be searched.
-            array('id, name, disallowed_types, enabled, features_required, keep_completed, kill_delay, max_queuable, max_running, max_user_queuable, max_user_run, priority, queue_type, required_login_property, started', 'safe', 'on' => 'search'),
+            array('id, name, disallowed_types, enabled, features_required, keep_completed, kill_delay, max_queuable, max_running, max_user_queuable, max_user_run, priority, queue_type, required_login_property, started,status', 'safe', 'on' => 'search'),
         );
     }
 
@@ -95,6 +95,7 @@ class Queue extends CActiveRecord {
             'acl_logic_or' => 'ACL Logic OR',
             'acl_user_enable' => 'ACL User Enable',
             'acl_host_enable' => 'ACL Host Enable',
+            'status' => 'Status',
         );
     }
 

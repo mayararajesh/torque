@@ -1,3 +1,8 @@
+<style>
+    .null{
+        color : red !important;
+    }
+</style>
 <?php
 /* @var $this QueueController */
 /* @var $model Queue */
@@ -20,7 +25,7 @@ $this->menu = array(
 );
 ?>
 
-<h1> Queue :: <?php echo $model->name; ?></h1>
+<h1> Queue :: <a href="<?php echo Yii::app()->createUrl('queue/details/',array('id'=>$model->id));?>"><?php echo $model->name; ?></a></h1>
 
 <?php
 $this->widget('zii.widgets.CDetailView', array(
@@ -159,7 +164,7 @@ if ($min) {
         ),
     ));
 } else {
-    echo "<h4>Not yet added</h4>";
+    echo "<h4>Not yet added.</h4>";
 }
 ?>
     <?php if ($model->acl_group_enable) { ?>
@@ -212,7 +217,7 @@ if ($min) {
         </script>
         <?php
     } else {
-        echo '<h4>Not yet added.';
+        echo '<h4>Not yet added.</h4>';
     }
 }
 ?>
@@ -266,7 +271,7 @@ if ($min) {
         </script>
         <?php
     } else {
-        echo '<h4>Not yet added.';
+        echo '<h4>Not yet added.</h4>';
     }
 }
 ?>
@@ -321,7 +326,7 @@ if ($min) {
         </script>
         <?php
     } else {
-        echo '<h4>Not yet added.';
+        echo '<h4>Not yet added.</h4>';
     }
 }
 ?>

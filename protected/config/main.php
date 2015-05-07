@@ -23,6 +23,7 @@ return array(
         #'application.config.*',
         'application.models.*',
         'application.components.*',
+        'ext.EDataTables.*',
     ),
     'modules' => array(
         #uncomment the following to enable the Gii tool
@@ -38,16 +39,6 @@ return array(
             #enable cookie-based authentication
             'allowAutoLogin' => TRUE,
             'autoUpdateFlash' => FALSE,
-        ),
-        // ...
-//        'viewRenderer' => array(
-//            'class' => 'CPradoViewRenderer',
-//        ),
-        'fontawesome' => array(
-            'class' => 'ext.fontawesome.components.FontAwesome',
-        ),
-        'xdetailview' =>  array(
-            'class' => 'ext.widgets.XDetailView',
         ),
         #uncomment the following to enable URLs in path-format
         'urlManager' => array(

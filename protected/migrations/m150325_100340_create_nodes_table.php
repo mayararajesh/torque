@@ -26,6 +26,7 @@ class m150325_100340_create_nodes_table extends CDbMigration {
             'np' => 'int NULL',
             'gpus' => 'int NULL',
             'mics' => 'int NULL',
+            'status' => 'TEXT',
         ));
     }
 
