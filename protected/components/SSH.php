@@ -23,23 +23,23 @@ class SSH extends CUserIdentity {
     private $lastLog;
     public $errorCode;
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Initializes the object of SSH Class
      * @param string $host
      * @param integer $port
      * @param string $user
      */
-    public function __construct($host, $port, $user) {
-        $this->privateKey = Yii::app()->basePath . '/.ssh-key/id_rsa';
-        $this->publicKey = Yii::app()->basePath . '/.ssh-key/id_rsa.pub';
+    public function __construct($host, $port, $user, $public_key = '~/.ssh-key/id_rsa.pub') {
+        $this->privateKey = '~/.ssh-key/id_rsa_'.$user;
+        $this->publicKey = $public_key;
         $this->host = $host;
         $this->port = $port;
         $this->user = $user;
         $this->connect();
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Checks is it connected or not
      * 
@@ -49,7 +49,7 @@ class SSH extends CUserIdentity {
         return (boolean) $this->conn;
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Connect to remote host using its port
      * 
@@ -61,7 +61,7 @@ class SSH extends CUserIdentity {
         }
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Authenticate using password
      * 
@@ -72,7 +72,7 @@ class SSH extends CUserIdentity {
         return @ssh2_auth_password($this->conn, $this->user, $this->pass);
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Authenticate using public key
      * 
@@ -82,7 +82,7 @@ class SSH extends CUserIdentity {
         return @ssh2_auth_pubkey_file($this->conn, $this->user, $this->publicKey, $this->privateKey);
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Sends file to remote
      * 
@@ -99,7 +99,7 @@ class SSH extends CUserIdentity {
         $sftp = ssh2_sftp($this->conn);
         $sftpStream = @fopen('ssh2.sftp://' . $sftp . $remoteFile, 'w');
         if (!$sftpStream) {
-            //  if 1 method fails try the other one
+//  if 1 method fails try the other one
             if (!@ssh2_scp_send($this->conn, $localFile, $remoteFile, $permision)) {
                 throw new CException(Yii::t('application', "SSH could not open remote file: $remoteFile"));
             } else {
@@ -114,7 +114,7 @@ class SSH extends CUserIdentity {
         return true;
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Receieves remote file
      * 
@@ -130,7 +130,7 @@ class SSH extends CUserIdentity {
         throw new CException(Yii::t('application', "SSH unable to get remote file {$remoteFile}"));
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Deletes remote file
      * 
@@ -146,7 +146,7 @@ class SSH extends CUserIdentity {
         throw new CException(Yii::t('application', "SSH unable to delete remote file {$remoteFile}"));
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Creates remote link for the target file
      * 
@@ -163,7 +163,7 @@ class SSH extends CUserIdentity {
         throw new CException(Yii::t('application', "SSH unable to create sybbolic link {$link}"));
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Removes the remote directory 
      * 
@@ -179,7 +179,7 @@ class SSH extends CUserIdentity {
         throw new CException(Yii::t('application', "SSH unable to remove directory {$remoteDir}"));
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Creates the remote directory
      * 
@@ -197,7 +197,7 @@ class SSH extends CUserIdentity {
         throw new CException(Yii::t('application', "SSH unable to create directory {$remoteDir}"));
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Renames the remote file from old to new
      * 
@@ -214,7 +214,7 @@ class SSH extends CUserIdentity {
         throw new CException(Yii::t('application', "SSH unable to rename file {$oldFilename}"));
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Executes the single line command
      * 
@@ -234,7 +234,7 @@ class SSH extends CUserIdentity {
         return $this->lastLog;
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Execute bulk of commands as a stream
      * 
@@ -261,7 +261,7 @@ class SSH extends CUserIdentity {
         return $out;
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Gives the last log information
      * 
@@ -271,25 +271,25 @@ class SSH extends CUserIdentity {
         return $this->lastLog;
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Disconnects the shell connection
      * 
      * @return NULL
      */
     public function disconnect() {
-        // if disconnect function is available call it..
+// if disconnect function is available call it..
         if (function_exists('ssh2_disconnect')) {
             ssh2_disconnect($this->conn);
         } else { // if no disconnect func is available, close conn, unset var
             @fclose($this->conn);
             $this->conn = false;
         }
-        // return null always
+// return null always
         return null;
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Checks wethear given file is a file or not 
      * @param string $path
@@ -300,7 +300,7 @@ class SSH extends CUserIdentity {
         return (boolean) trim($output);
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Checks wethear given file is directory or not 
      * @param string $path
@@ -311,7 +311,7 @@ class SSH extends CUserIdentity {
         return (boolean) trim($output);
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Excutes the provided command and checks for error code
      * 
@@ -330,17 +330,17 @@ class SSH extends CUserIdentity {
         $this->lastLog = stream_get_contents($this->stream);
         fclose($this->stream);
         $returnVal = explode("\n", trim($this->lastLog));
-        //print_r($returnVal);
+//print_r($returnVal);
         if (end($returnVal) == '0') {
             return rtrim(trim($this->lastLog), "\n0");
         } else {
-            //return rtrim(trim($this->lastLog), "\n0");
+//return rtrim(trim($this->lastLog), "\n0");
             return 'failed';
         }
-        //return $this->lastLog;
+//return $this->lastLog;
     }
 
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
     /**
      * Write(s) string to remote file using SSH Stream
      * 

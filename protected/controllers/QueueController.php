@@ -213,7 +213,7 @@ class QueueController extends Controller {
             if ($formModelObj->validate()) {
                 $attributes = $formModelObj->attributes;
                 $tempStr = NULL;
-                $dbDisallowedTypes = split(',', $model->disallowed_types);
+                $dbDisallowedTypes = explode(',', $model->disallowed_types);
                 $tempStr = "";
                 foreach ($dbDisallowedTypes as $attribute) {
                     if (!empty($attribute)) {
@@ -301,7 +301,7 @@ class QueueController extends Controller {
         } else {
             $attributes = $model->attributes;
             unset($attributes['id']);
-            $attributes['disallowed_types'] = split(',', $attributes['disallowed_types']);
+            $attributes['disallowed_types'] = explode(',', $attributes['disallowed_types']);
             $formModelObj->attributes = $attributes;
         }
         $this->render('update', array(
@@ -555,7 +555,7 @@ class QueueController extends Controller {
                 $attributes['nodes'] = $modelTemp->nodes;
                 $attributes['procct'] = $modelTemp->procct;
                 if ($modelTemp->walltime !== NULL || $modelTemp->walltime === "") {
-                    $walltime = split(':', $modelTemp->walltime);
+                    $walltime = explode(':', $modelTemp->walltime);
                     $attributes['walltime_hh'] = isset($walltime[0]) ? $walltime[0] : '00';
                     $attributes['walltime_mm'] = isset($walltime[1]) ? $walltime[1] : '00';
                     $attributes['walltime_ss'] = isset($walltime[2]) ? $walltime[2] : '00';
@@ -737,7 +737,7 @@ class QueueController extends Controller {
                 $xmlQueueList = $sshHost->cmd($cmd);
                 if ($xmlQueueList !== "") {
                     $xmlQueueList = str_replace("\r\n", "", $xmlQueueList);
-                    $xmlQueueList = split(',', $xmlQueueList);
+                    $xmlQueueList = explode(',', $xmlQueueList);
                     sort($xmlQueueList, SORT_STRING);
                     $responseArray["status"] = SUCCESS;
                     $responseArray["message"] = 'Successfully retrieved queue list.';

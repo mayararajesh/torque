@@ -88,6 +88,7 @@ class BrowserController extends Controller {
         $host = Yii::app()->params->hostDetails['host'];
         $port = Yii::app()->params->hostDetails['port'];
         $user = Yii::app()->user->name;
+        #$publicKey = Yii::app()->user->public_key_path;
         $encryptedPassword = Yii::app()->user->password;
         $aes = new AES($encryptedPassword);
         $ssh = new SSH($host, $port, $user);
@@ -97,7 +98,7 @@ class BrowserController extends Controller {
         if ($ssh->dirExists($root . $dir)) {
             //$files = scandir($root . $dir);
             $cmdOutput = $ssh->cmdExec("ls -laL \"" . $root . $dir . "\" ;echo -e \"\n\"$?");
-            
+
             if ($cmdOutput !== 'failed') {
                 $cmdOutput = trim($cmdOutput);
                 $lines = explode("\n", $cmdOutput);

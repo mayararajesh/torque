@@ -6,9 +6,9 @@ $this->breadcrumbs = array(
     'details'
 );
 foreach (Yii::app()->user->getFlashes() as $key => $message) {
-    if (Yii::app()->user->hasFlash($key)) {
+    #if (Yii::app()->user->hasFlash($key)) {
         echo '<div class="flash-' . $key . '">' . $message . "</div>";
-    }
+    #}
 }
 if (isset($model->status)) {
     $nodeStatusDetails = json_decode($model->status, TRUE);
@@ -33,13 +33,14 @@ if (isset($model->status)) {
             unset($nodeStatusDetails['status']['varattr']);
         }
         if (isset($nodeStatusDetails['status']['idletime'])) {
-            $hours = floor($nodeStatusDetails['status']['idletime'] / (60 * 60));
-            $minutes = floor(($nodeStatusDetails['status']['idletime'] - ($hours * 60 * 60) ) / 60);
-            $seconds = ($nodeStatusDetails['status']['idletime'] - ($hours * 60 * 60) - ($minutes * 60) );
-            $hours = strlen($hours) == 1 ? "0" . $hours : $hours;
-            $minutes = strlen($minutes) == 1 ? "0" . $minutes : $minutes;
-            $seconds = strlen($seconds) == 1 ? "0" . $seconds : $seconds;
-            $nodeStatusDetails['status']['idle_time'] = $hours . ":" . $minutes . ":" . $seconds;
+            $minutes = round($nodeStatusDetails['status']['idletime'] / 60);
+//            $hours = floor($nodeStatusDetails['status']['idletime'] / (60 * 60));
+//            $minutes = floor(($nodeStatusDetails['status']['idletime'] - ($hours * 60 * 60) ) / 60);
+//            $seconds = ($nodeStatusDetails['status']['idletime'] - ($hours * 60 * 60) - ($minute.s * 60) );
+//            $hours = strlen($hours) == 1 ? "0" . $hours : $hours;
+//            $minutes = strlen($minutes) == 1 ? "0" . $minutes : $minutes;
+//            $seconds = strlen($seconds) == 1 ? "0" . $seconds : $seconds;
+            $nodeStatusDetails['status']['idle_time'] = $minutes . " mins";
             unset($nodeStatusDetails['status']['idletime']);
         }
         if (isset($nodeStatusDetails['status']['ncpus'])) {
@@ -86,7 +87,6 @@ if (isset($model->status)) {
         unset($nodeStatusDetails['status']);
         $nodeStatusDetails['status'] = $temp;
     }
-
     unset($nodeStatusDetails['mom_service_port']);
     unset($nodeStatusDetails['mom_manager_port']);
     echo REQUIRED::createXDetailView($nodeStatusDetails);

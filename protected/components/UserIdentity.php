@@ -16,39 +16,74 @@ class UserIdentity extends CUserIdentity {
      * @return boolean whether authentication succeeds.
      */
     public function authenticate() {
-        /*
-          $users=array(
-          // username => password
-          'demo'=>'demo',
-          'admin'=>'admin',
-          );
-          if(!isset($users[$this->username]))
-          $this->errorCode=self::ERROR_USERNAME_INVALID;
-          elseif($users[$this->username]!==$this->password)
-          $this->errorCode=self::ERROR_PASSWORD_INVALID;
-          else
-          $this->errorCode=self::ERROR_NONE;
-          return !$this->errorCode; */
         $host = Yii::app()->params['hostDetails']['host'];
         $port = Yii::app()->params['hostDetails']['port'];
         $sshHost = new SSH($host, $port, $this->username);
-
+        $keyFile = "";
         if ($sshHost->isConnected() && $sshHost->authenticate_pass($this->password)) {
-            $aes = new AES($this->password);
-            $encryptedPassword = $aes->encrypt();
-            $this->setState('name', $this->username);
-            $this->setState('password', $encryptedPassword);
-            $this->setState('role', 'admin');
-            Yii::app()->authManager->save();
-            $sshHost->disconnect();
-            $this->errorCode =self::ERROR_NONE;
+            /*
+//            echo "<pre>";
+//            $user = new User();
+//            $details = $user->findByAttributes(array('username' => $this->username));
+//            if ($details === NULL) {
+//                if ($this->username === "root") {
+//                    $tmpFile = "/{$this->username}/.ssh/id_rsa_{$this->username}.pub";
+//                }else{
+//                    $tmpFile = "/home/{$this->username}/.ssh/id_rsa_{$this->username}.pub";
+//                }
+//                if ((bool) $sshHost->cmd("[ -f {$tmpFile} ] && echo 1 || echo 0")) {
+//                    $keyFile = $tmpFile;
+//                } else if (($keyFile = $this->generateSSHKeyPair($sshHost, $this->username, $tmpFile)) !== FALSE) {
+//                    Yii::app()->user->setFlash('danger', '</strong>Unable to generate ssh key pair.</strong>' . $response);
+//                }
+//                if ($keyFile) {
+//                    $time = date('Y-m-d H:i:s', time());
+//                    $attributes = array(
+//                        'username' => $this->username,
+//                        'pub_key_path' => $keyFile,
+//                        'created_at' => $time,
+//                        'updated_at' => $time,
+//                    );
+//                    #print_r($attributes);
+//                    $user->attributes = $attributes;
+//                    if (!$user->save()) {
+//                        Yii::app()->user->setFlash('info', 'Unable to store user details.');
+//                    } else {
+//                        $details = $user->findByAttributes(array('username' => $this->username));
+//                    }
+//                }
+//            }
+//            if ($details !== NULL) {
+             * 
+             */
+                $aes = new AES($this->password);
+                $encryptedPassword = $aes->encrypt();
+                $this->setState('name', $this->username);
+                $this->setState('password', $encryptedPassword);
+                #$this->setState('public_key_path', $details->pub_key_path);
+                $this->setState('role', 'admin');
+                Yii::app()->authManager->save();
+                $this->errorCode = self::ERROR_NONE;
+                $sshHost->disconnect();
+            
             //return TRUE;
         } else {
             //return FALSE;
-            $this->errorCode =self::ERROR_PASSWORD_INVALID;
+            $this->errorCode = self::ERROR_PASSWORD_INVALID;
             #$this->addError('password', 'Incorrect username or password.');
         }
         return !$this->errorCode;
     }
+
+    //--------------------------------------------------------------------------
+    /**
+     * 
+    private function generateSSHKeyPair($sshHost, $user, $file) {
+        $response = $sshHost->cmd("ssh-keygen -q -N '' -f {$file}" . $user);
+        if (trim($response) !== "") {
+            return FALSE;
+        }
+        return "/{$user}/.ssh/id_rsa_{$user}.pub";
+    }**/
 
 }

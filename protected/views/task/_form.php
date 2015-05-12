@@ -14,6 +14,9 @@
 
     <?php
     echo $form->errorSummary($model);
+    foreach (Yii::app()->user->getFlashes() as $type => $message) {
+        echo '<div class="alert alert-' . $message . '">' . $message . '</div>';
+    }
     ?>
 
     <div class="row">
@@ -102,7 +105,7 @@
 <link href="http://labs.abeautifulsite.net/archived/jquery-fileTree/demo/jqueryFileTree.css" rel="stylesheet" />
 <script type="text/javascript" src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
 <script src="http://labs.abeautifulsite.net/archived/jquery-fileTree/demo/jqueryFileTree.js"></script>
-<script type="text/javascript" src="<?php #echo Yii::app()->request->baseUrl; ?>/js/tasks/taskManagerHome.js"></script>
+<script type="text/javascript" src="<?php #echo Yii::app()->request->baseUrl;  ?>/js/tasks/taskManagerHome.js"></script>
 -->
 
 <?php

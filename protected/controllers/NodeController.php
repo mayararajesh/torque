@@ -272,7 +272,7 @@ class NodeController extends Controller {
             $model['gpus'] = "";
             $command = $sshHost->cmd("pbsnodes -x " . $model['name']);
             #var_dump($command);
-            $commandSyntax = split(':', $command);
+            $commandSyntax = explode(':', $command);
             if ($commandSyntax[0] !== "pbsnodes") {
                 $xmlstring = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" . $command;
                 $xml = simplexml_load_string($xmlstring);
@@ -283,13 +283,12 @@ class NodeController extends Controller {
                 if ((int) $nodeDetails['np'] === 1) {
                     $position = 2;
                 }
-
                 $cmd = "cat -n " . Yii::app()->params['torque']['serverPriv'] . "/nodes | grep -i " . $model['name'] . " | awk -F \" \" '{print $1}'";
                 $line = $sshHost->cmd($cmd);
                 if ($line = (int) $line) {
                     $cmd = "cat " . Yii::app()->params['torque']['serverPriv'] . "/nodes | grep -i " . $model['name'] . " | awk -F \" \" '{print \$$position}'";
                     $current = $sshHost->cmd($cmd);
-                    $cusrrentArr = split('=', $current);
+                    $cusrrentArr = explode('=', $current);
                     if ($cusrrentArr[0] == 'gpus') {
                         $cmd = "sed -i \"" . $line . "s/" . trim($current) . "/ /\" " . Yii::app()->params['torque']['serverPriv'] . "/nodes";
 
@@ -314,9 +313,8 @@ class NodeController extends Controller {
                 $cmd = "";
             }
         }
-        if (count($error) > 0) {
-            var_dump($error);
-            exit;
+        foreach($error as $ke => $me){
+            Yii::app()->user->setFlash('danger-'.$ke,$me);
         }
     }
 
