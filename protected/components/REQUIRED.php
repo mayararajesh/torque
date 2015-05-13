@@ -48,7 +48,7 @@ class REQUIRED {
                         if (isset($t[1])) {
                             $tempArr[$t[0]] = $t[1];
                         } else {
-                            $tempArr = $t;
+                            array_push($tempArr, $t[0]);
                         }
                     }
                     $v = $tempArr;
@@ -135,6 +135,20 @@ class REQUIRED {
         $output = curl_exec($ch);
         # close curl resource to free up system resources
         curl_close($ch);
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * 
+     */
+    public static function replaceKey($array, $source, $target) {
+        $keys = array_keys($array);
+        $index = array_search($source, $keys);
+        if ($index !== false) {
+            $keys[$index] = $target;
+            $array = array_combine($keys, $array);
+        }
+        return $array;
     }
 
 }

@@ -93,7 +93,6 @@ class CrawlerController extends Controller {
                 $queue = explode("\r\n", $queue);
                 foreach ($queue as $k => $q) {
                     $q = explode("=", $q);
-                    #echo trim($q[0]);
                     if (!isset($q[1]) && !empty($q[0])) {
                         $q[1] = trim($q[0]);
                         $q[0] = "name";

@@ -22,6 +22,7 @@ if (isset($model->status)) {
     if(isset($queueStatusDetails['mtime'])){
         $queueStatusDetails['mtime'] = date('Y-m-d H:i:s',(int)$queueStatusDetails['mtime']);
     }
+    #print_r($queueStatusDetails);
     echo REQUIRED::createXDetailView($queueStatusDetails);
 } else {
     echo '<h4> No Details Found.</h4>';
